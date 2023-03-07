@@ -1,0 +1,16 @@
+name: Prepare Release
+on:
+  workflow_dispatch:
+    inputs:
+      release-type:
+        description: 'Release type? (major/minor/fix)'
+        required: true
+        default: ''
+
+
+jobs:
+  release-version:
+    name: Release new version
+    uses: Matter-Tech/matter-library-actions/.github/workflows/release.yaml@v0.0.1
+    with:
+      release-type: ${{github.event.inputs.release-type}}
