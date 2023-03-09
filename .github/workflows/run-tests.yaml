@@ -6,3 +6,22 @@ jobs:
   run-test:
     name: Run tests
     uses: Matter-Tech/matter-library-actions/.github/workflows/run-tests.yaml@v0
+
+  run-dockerized-test:
+    name: Run the tests that requires docker
+    runs-on: ubuntu-latest
+    steps:
+      - name: Code checkout
+        uses: actions/checkout@v3
+
+      - name: Installing Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+          cache: 'pip'
+
+      - name: Installing Hatch
+        run: pip install --upgrade hatch
+
+      - name: Running tests
+        run: hatch run dockerized:test

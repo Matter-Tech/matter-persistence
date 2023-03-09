@@ -1,5 +1,5 @@
 [project]
-name = "matter-persistance"
+name = "matter-persistence"
 description = "Matter persistance library."
 readme = "README.md"
 requires-python = ">=3.10"
@@ -27,29 +27,27 @@ Issues = "https://github.com/Matter-Tech/matter-persistence/issues"
 Source = "https://github.com/Matter-Tech/matter-persistence"
 
 [project.optional-dependencies]
-database = [
-    "sqlalchemy",
-    "asyncpg"]
-cache = [
-    "emcache"
-]
+database = ["sqlalchemy[asyncio]==2.0.*"]
+
 
 [tool.hatch.version]
 path = "matter_persistence/__about__.py"
 
 [tool.hatch.envs.default]
 dependencies = [
+    "matter-persistence[database]",
     "pytest",
     "pytest-cov",
+    "pytest-asyncio",
     "black",
     "mypy",
-    "ruff"
+    "ruff",
+    "aiosqlite"
 ]
-
 [tool.hatch.envs.default.scripts]
-test = "pytest  -W error --cov-report=term-missing --cov-config=pyproject.toml --cov=matter_exceptions --cov=tests {args}"
+test = "pytest --cov-report=term-missing --cov-config=pyproject.toml -c=pyproject.toml --cov=matter_persistence {args}"
 no-cov = "test --no-cov {args}"
-typing = "mypy --install-types --non-interactive {args:matter_exceptions tests}"
+typing = "mypy --install-types --non-interactive {args:matter_persistance tests}"
 style = [
     "ruff {args:.}",
     "black --check --diff {args:.}",
@@ -64,6 +62,16 @@ lint = [
     "typing",
 ]
 
+[tool.hatch.envs.dockerized]
+extra-dependencies = [
+    "testcontainers",
+    "asyncpg",
+    "psycopg2"]
+
+[tool.hatch.envs.dockerized.scripts]
+test = "pytest -c=pyproject.toml tests/*/dockerized"
+
+
 [tool.black]
 target-version = ["py310"]
 line-length = 120
@@ -77,6 +85,7 @@ branch = true
 parallel = true
 omit = [
     "matter_persistence/__about__.py",
+    "matter_persistence/__init__.py",
 ]
 
 [tool.coverage.report]
@@ -86,6 +95,11 @@ exclude_lines = [
     "if TYPE_CHECKING:",
 ]
 fail_under = 95
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+addopts = "-x --ignore-glob=tests/*/dockerized"
+filterwarnings = ["error"]
 
 [build-system]
 requires = ["hatchling"]
