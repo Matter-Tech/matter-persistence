@@ -1,11 +1,11 @@
 from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
 
-from .base import MatterBaseModel
+from .base import DatabaseBaseModel
 from .config import DatabaseConfig
 
 
 class DatabaseClient:
-    metadata_obj = MatterBaseModel.metadata
+    metadata_obj = DatabaseBaseModel.metadata
     __engine: AsyncEngine = None
     pool_size: int = 1
 
