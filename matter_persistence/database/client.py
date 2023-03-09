@@ -3,6 +3,8 @@ from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
 from .base import DatabaseBaseModel
 from .config import DatabaseConfig
 
+DatabaseAsyncEngine = AsyncEngine
+
 
 class DatabaseClient:
     metadata_obj = DatabaseBaseModel.metadata
@@ -27,5 +29,5 @@ class DatabaseClient:
             await cls.__engine.dispose()
 
     @classmethod
-    def get_engine(cls) -> AsyncEngine:
+    def get_engine(cls) -> DatabaseAsyncEngine:
         return cls.__engine

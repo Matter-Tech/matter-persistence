@@ -5,9 +5,12 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from .client import DatabaseClient
 
+DatabaseOrmAyncSession = AsyncSession
+
 
 @asynccontextmanager
-async def get_or_reuse_session(session: Optional[AsyncSession] = None, transactional: bool = False) -> AsyncSession:
+async def get_or_reuse_session(session: Optional[DatabaseOrmAyncSession] = None,
+                               transactional: bool = False) -> DatabaseOrmAyncSession:
     if session is None or session.closed:
         _session = async_sessionmaker(DatabaseClient.get_engine(), expire_on_commit=False)
         if transactional:

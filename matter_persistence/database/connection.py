@@ -7,10 +7,13 @@ from sqlalchemy.ext.asyncio import AsyncConnection
 from .client import DatabaseClient
 
 
+DatabaseAsyncConnection = AsyncConnection
+DatabaseAsyncRawConnection = Any
+
 @asynccontextmanager
 async def get_or_reuse_connection(
-    connection: Optional[AsyncConnection] = None, transactional: bool = False
-) -> AsyncConnection:
+    connection: Optional[DatabaseAsyncConnection] = None, transactional: bool = False
+) -> DatabaseAsyncConnection:
     if connection is None or connection.closed:
         if transactional:
             async with DatabaseClient.get_engine().begin() as new_trans_conn:
@@ -33,7 +36,7 @@ async def get_or_reuse_connection(
             yield connection
 
 
-async def get_raw_driver_connection(sa_connection: AsyncConnection) -> Any:
+async def get_raw_driver_connection(sa_connection: DatabaseAsyncConnection) -> DatabaseAsyncRawConnection:
     if sa_connection.in_transaction():
         raise Exception("get_raw__driver_connection can't be used with a transactional sqlAlchemy connections")
 
