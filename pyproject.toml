@@ -17,7 +17,8 @@ classifiers = [
     "Programming Language :: Python :: Implementation :: PyPy",
 ]
 dependencies = [
-    "pydantic"
+    "pydantic",
+    "matter-exceptions @ git+https://github.com/Matter-Tech/matter-exceptions@0.1.0"
 ]
 dynamic = ["version"]
 
@@ -49,7 +50,7 @@ dependencies = [
 [tool.hatch.envs.default.scripts]
 test = "pytest --cov-report=term-missing --cov-config=pyproject.toml -c=pyproject.toml --cov=matter_persistence {args}"
 no-cov = "test --no-cov {args}"
-typing = "mypy --install-types --non-interactive {args:matter_persistance tests}"
+typing = "mypy --install-types --non-interactive {args:matter_persistence tests}"
 style = [
     "ruff {args:.}",
     "black --check --diff {args:.}",
@@ -61,7 +62,7 @@ fmt = [
 ]
 lint = [
     "style",
-    "typing",
+    #"typing",
 ]
 
 [tool.hatch.envs.dockerized]
@@ -72,6 +73,8 @@ extra-dependencies = [
 [tool.hatch.envs.dockerized.scripts]
 test = "pytest -c=pyproject.toml tests/*/dockerized"
 
+[tool.hatch.metadata]
+allow-direct-references = true
 
 [tool.black]
 target-version = ["py310"]

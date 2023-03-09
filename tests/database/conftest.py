@@ -10,3 +10,9 @@ async def start_database_client():
     DatabaseClient.start(config)
     yield
     await DatabaseClient.stop()
+    DatabaseClient.destroy()
+
+
+@pytest.fixture(autouse=True)
+async def stopping_database_client():
+    yield

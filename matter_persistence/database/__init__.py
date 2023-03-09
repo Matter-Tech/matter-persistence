@@ -11,10 +11,14 @@ __all__ = [
     "DatabaseAsyncConnection",
 ]
 
-from .base import DatabaseBaseModel
+from .orm import DatabaseBaseModel
 from .client import DatabaseClient, DatabaseAsyncEngine
 from .config import DatabaseConfig
-from .connection import (get_or_reuse_connection, get_raw_driver_connection, DatabaseAsyncRawConnection,
-                         DatabaseAsyncConnection)
+from .connection import (
+    get_or_reuse_connection,
+    get_raw_driver_connection,
+    DatabaseAsyncRawConnection,
+    DatabaseAsyncConnection,
+)
 from .session import get_or_reuse_session
 from .utils import is_database_alive

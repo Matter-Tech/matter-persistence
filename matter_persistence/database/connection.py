@@ -5,21 +5,27 @@ from typing import Optional, Any
 from sqlalchemy.ext.asyncio import AsyncConnection
 
 from .client import DatabaseClient
-
+from .exceptions import DatabaseNoEngineSetException, ConnectionInTransactionException, InvalidPoolStateException
 
 DatabaseAsyncConnection = AsyncConnection
 DatabaseAsyncRawConnection = Any
+
 
 @asynccontextmanager
 async def get_or_reuse_connection(
     connection: Optional[DatabaseAsyncConnection] = None, transactional: bool = False
 ) -> DatabaseAsyncConnection:
+    engine = DatabaseClient.get_engine()
+
+    if engine is None:
+        raise DatabaseNoEngineSetException
+
     if connection is None or connection.closed:
         if transactional:
-            async with DatabaseClient.get_engine().begin() as new_trans_conn:
+            async with engine.begin() as new_trans_conn:
                 yield new_trans_conn
         else:
-            async with DatabaseClient.get_engine().connect() as new_conn:
+            async with engine.connect() as new_conn:
                 yield new_conn
     else:
         if transactional:
@@ -38,7 +44,9 @@ async def get_or_reuse_connection(
 
 async def get_raw_driver_connection(sa_connection: DatabaseAsyncConnection) -> DatabaseAsyncRawConnection:
     if sa_connection.in_transaction():
-        raise Exception("get_raw__driver_connection can't be used with a transactional sqlAlchemy connections")
+        raise ConnectionInTransactionException(
+            "get_raw_driver_connection can't " "be used with a transactional connection"
+        )
 
     for _ in range(DatabaseClient.pool_size):
         raw_connection = await sa_connection.get_raw_connection()
@@ -53,4 +61,4 @@ async def get_raw_driver_connection(sa_connection: DatabaseAsyncConnection) -> D
         else:
             return connection
 
-    raise Exception("Not possible to open a valid driver connection")
+    raise InvalidPoolStateException("Not possible to open a valid driver connection. The pool is not in a valid state")

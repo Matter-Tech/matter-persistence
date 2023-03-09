@@ -1,13 +1,11 @@
 from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
 
-from .base import DatabaseBaseModel
 from .config import DatabaseConfig
 
 DatabaseAsyncEngine = AsyncEngine
 
 
 class DatabaseClient:
-    metadata_obj = DatabaseBaseModel.metadata
     __engine: AsyncEngine = None
     pool_size: int = 1
 
@@ -27,6 +25,11 @@ class DatabaseClient:
     async def stop(cls):
         if cls.__engine:
             await cls.__engine.dispose()
+
+    @classmethod
+    def destroy(cls):
+        del cls.__engine
+        cls.__engine = None
 
     @classmethod
     def get_engine(cls) -> DatabaseAsyncEngine:
