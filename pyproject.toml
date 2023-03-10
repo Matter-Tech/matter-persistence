@@ -29,8 +29,9 @@ Source = "https://github.com/Matter-Tech/matter-persistence"
 
 [project.optional-dependencies]
 database = ["sqlalchemy[asyncio]==2.0.4"]
-database-postgres = ["matter-persistence[database]",
-                     "sqlalchemy[postgres]==2.0.4"]
+database-postgresql = ["matter-persistence[database]",
+    "sqlalchemy[postgresql]==2.0.4",
+    "asyncpg==0.27.0"]
 
 
 [tool.hatch.version]
@@ -68,7 +69,7 @@ lint = [
 
 [tool.hatch.envs.dockerized]
 extra-dependencies = [
-    "matter-persistence[database-postgres]",
+    "matter-persistence[database-postgresql]",
     "testcontainers"]
 
 [tool.hatch.envs.dockerized.scripts]
