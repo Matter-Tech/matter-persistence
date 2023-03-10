@@ -232,3 +232,11 @@ async def test_connection_is_in_nested_transaction(start_database_client):
                 await reasses(connection, table, {"first", "second"})
             await reasses(connection, table, {"first"})
         await reasses(connection, table, set())
+
+
+async def test_get_or_reuse_connection_creating_a_nested_transaction(start_database_client):
+    async with get_or_reuse_connection(transactional=True) as conn_1:
+        assert conn_1.in_nested_transaction() is False
+        async with get_or_reuse_connection(conn_1, transactional=True) as conn_2:
+            assert conn_1.in_nested_transaction() is True
+            assert conn_2 == conn_1

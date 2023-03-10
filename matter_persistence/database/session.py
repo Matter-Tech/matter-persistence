@@ -12,7 +12,7 @@ DatabaseOrmAyncSession = AsyncSession
 async def get_or_reuse_session(
     session: Optional[DatabaseOrmAyncSession] = None, transactional: bool = False
 ) -> DatabaseOrmAyncSession:
-    if session is None or session.closed:
+    if session is None:
         _session = async_sessionmaker(DatabaseClient.get_engine(), expire_on_commit=False)
         if transactional:
             async with _session.begin() as _session_conn:

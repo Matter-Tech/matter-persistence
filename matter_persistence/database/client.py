@@ -6,7 +6,7 @@ DatabaseAsyncEngine = AsyncEngine
 
 
 class DatabaseClient:
-    __engine: AsyncEngine = None
+    __engine: DatabaseAsyncEngine = None
     pool_size: int = 1
 
     @classmethod
@@ -28,8 +28,9 @@ class DatabaseClient:
 
     @classmethod
     def destroy(cls):
-        del cls.__engine
-        cls.__engine = None
+        if cls.__engine:
+            del cls.__engine
+            cls.__engine = None
 
     @classmethod
     def get_engine(cls) -> DatabaseAsyncEngine:
