@@ -11,6 +11,7 @@ __all__ = [
     "DatabaseAsyncConnection",
     "ConnectionInTransactionException",
     "InvalidPoolStateException",
+    "InstanceNotFoundError",
 ]
 
 from .client import DatabaseClient, DatabaseAsyncEngine
@@ -21,7 +22,7 @@ from .connection import (
     DatabaseAsyncRawConnection,
     DatabaseAsyncConnection,
 )
-from .exceptions import ConnectionInTransactionException, InvalidPoolStateException
+from .exceptions import ConnectionInTransactionException, InvalidPoolStateException, InstanceNotFoundError
 from .orm import DatabaseBaseModel
 from .session import get_or_reuse_session
 from .utils import is_database_alive

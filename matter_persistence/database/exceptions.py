@@ -14,3 +14,7 @@ class ConnectionInTransactionException(DetailedException):
 
 class InvalidPoolStateException(DetailedException):
     pass
+
+
+class InstanceNotFoundError(DetailedException):
+    pass

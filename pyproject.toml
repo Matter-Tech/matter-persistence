@@ -47,8 +47,6 @@ dependencies = [
     "ruff",
     "aiosqlite"
 ]
-[[tool.hatch.envs.default.matrix]]
-python = ["3.10", "3.11"]
 
 [tool.hatch.envs.default.scripts]
 test = "pytest --cov-report=term-missing --cov-config=pyproject.toml -c=pyproject.toml --cov=matter_persistence {args}"
