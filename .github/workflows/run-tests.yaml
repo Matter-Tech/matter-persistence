@@ -5,7 +5,7 @@ on: push
 jobs:
   run-test:
     name: Run tests
-    uses: Matter-Tech/matter-library-actions/.github/workflows/run-tests.yaml@v0
+    uses: Matter-Tech/matter-library-actions/.github/workflows/run-tests.yaml@v1
 
   run-dockerized-test:
     name: Run the tests that requires docker
