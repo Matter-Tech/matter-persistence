@@ -9,9 +9,10 @@ __all__ = [
     "is_database_alive",
     "DatabaseAsyncRawConnection",
     "DatabaseAsyncConnection",
+    "ConnectionInTransactionException",
+    "InvalidPoolStateException",
 ]
 
-from .orm import DatabaseBaseModel
 from .client import DatabaseClient, DatabaseAsyncEngine
 from .config import DatabaseConfig
 from .connection import (
@@ -20,5 +21,7 @@ from .connection import (
     DatabaseAsyncRawConnection,
     DatabaseAsyncConnection,
 )
+from .exceptions import ConnectionInTransactionException, InvalidPoolStateException
+from .orm import DatabaseBaseModel
 from .session import get_or_reuse_session
 from .utils import is_database_alive

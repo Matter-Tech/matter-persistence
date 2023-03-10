@@ -30,7 +30,7 @@ Source = "https://github.com/Matter-Tech/matter-persistence"
 [project.optional-dependencies]
 database = ["sqlalchemy[asyncio]==2.0.4"]
 database-postgres = ["matter-persistence[database]",
-                      "sqlalchemy[postgres]==2.0.4"]
+                     "sqlalchemy[postgres]==2.0.4"]
 
 
 [tool.hatch.version]
@@ -47,6 +47,9 @@ dependencies = [
     "ruff",
     "aiosqlite"
 ]
+[[tool.hatch.envs.default.matrix]]
+python = ["3.10", "3.11"]
+
 [tool.hatch.envs.default.scripts]
 test = "pytest --cov-report=term-missing --cov-config=pyproject.toml -c=pyproject.toml --cov=matter_persistence {args}"
 no-cov = "test --no-cov {args}"
