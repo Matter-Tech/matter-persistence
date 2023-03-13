@@ -18,3 +18,7 @@ class InvalidPoolStateException(DetailedException):
 
 class InstanceNotFoundError(DetailedException):
     pass
+
+
+class InvalidActionError(DetailedException):
+    pass
