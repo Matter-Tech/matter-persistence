@@ -28,7 +28,7 @@ Issues = "https://github.com/Matter-Tech/matter-persistence/issues"
 Source = "https://github.com/Matter-Tech/matter-persistence"
 
 [project.optional-dependencies]
-database = ["sqlalchemy[asyncio]==2.0.4"]
+database = ["sqlalchemy[asyncio]==2.0.5.post1"]
 database-postgresql = [
     "matter-persistence[database]",
     "sqlalchemy[postgresql]==2.0.4",
