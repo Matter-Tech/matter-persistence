@@ -46,6 +46,7 @@ class DatabaseBaseModel(DeclarativeBase):
         cls,
         *where_clause,
         limit=100,
+        offset=0,
         ordered_by: List[Union[sqlalchemy.Column | sqlalchemy.ColumnClause]] | None = None,
     ):
         stmt = sqlalchemy.select(cls)
@@ -58,6 +59,9 @@ class DatabaseBaseModel(DeclarativeBase):
 
         if bool(ordered_by):
             stmt = stmt.order_by(*ordered_by)
+
+        if offset:
+            stmt = stmt.offset(offset)
 
         stmt = stmt.limit(limit=limit)
 

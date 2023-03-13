@@ -73,6 +73,26 @@ async def test_list_base_with_where(configure_base_class):
 
 
 @pytest.mark.asyncio
+async def test_list_base_with_where_as_a_list(configure_base_class):
+    for i in range(10):
+        b_1 = BaseOrmModel(name=f"item {i + 1}")
+        await b_1.save()
+
+        # just a sanity check to ensure the items is getting the right ids.
+        # this simplifies the underlying tests
+
+        assert b_1.id == i + 1
+    where_clause = [BaseOrmModel.id > 6, BaseOrmModel.id < 10]
+    base_list = await BaseOrmModel.list(*where_clause)
+
+    assert (len(base_list)) == 3
+
+    assert base_list[0].id == 7
+    assert base_list[1].id == 8
+    assert base_list[2].id == 9
+
+
+@pytest.mark.asyncio
 async def test_list_multiple_args(configure_base_class):
     for i in range(10):
         b_1 = BaseOrmModel(name=f"item {i + 1}")
@@ -91,3 +111,17 @@ async def test_list_multiple_args(configure_base_class):
 
     assert base_list[0].id == 9
     assert base_list[1].id == 8
+
+
+@pytest.mark.asyncio
+async def test_list_base_with_offset(configure_base_class):
+    for i in range(10):
+        b_1 = BaseOrmModel(name=f"item {i + 1}")
+        await b_1.save()
+
+    base_list = await BaseOrmModel.list(limit=2, offset=8)
+
+    assert len(base_list) == 2
+
+    assert base_list[0].id == 9
+    assert base_list[1].id == 10
