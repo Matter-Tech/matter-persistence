@@ -1,5 +1,8 @@
 # matter-persistence
 
+[![PyPI - Version](https://img.shields.io/pypi/v/matter-persistence.svg)](https://pypi.org/project/matter-persistence)
+[![PyPI - Python Version](https://img.shields.io/pypi/pyversions/matter-persistence.svg)](https://pypi.org/project/matter-persistence)
+
 **Table of Contents**
 
 - [Installation](#installation)
