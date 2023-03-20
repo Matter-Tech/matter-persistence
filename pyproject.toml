@@ -23,7 +23,7 @@ dependencies = [
 dynamic = ["version"]
 
 [project.scripts]
-migrations = "matter_persistence.database.migrations.command"
+migrations = "matter_persistence.database.migrations.command:app"
 
 [project.urls]
 Documentation = "https://github.com/Matter-Tech/matter-persistence#readme"
