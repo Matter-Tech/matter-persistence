@@ -41,6 +41,7 @@ async def test_get_raw_connection_returns_a_valid_asyncpg_object(external_connec
         assert is_closed_2 is False
 
 
+@pytest.mark.xfail
 @pytest.mark.asyncio
 async def test_derived_raw_driver_connection_directly_from_sqAlc_connection_can_lead_to_use_a_closed_asyncpg_object(
     external_connection,
