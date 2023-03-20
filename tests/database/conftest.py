@@ -8,11 +8,11 @@ async def start_database_client():
     config = DatabaseConfig(connection_uri="sqlite+aiosqlite://")
 
     DatabaseClient.start(config)
-    yield
-    await DatabaseClient.stop()
-    DatabaseClient.destroy()
+    yield config
 
 
 @pytest.fixture(autouse=True)
 async def stopping_database_client():
     yield
+    await DatabaseClient.stop()
+    DatabaseClient.destroy()

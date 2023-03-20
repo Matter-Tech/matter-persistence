@@ -55,7 +55,7 @@ async def get_raw_driver_connection(sa_connection: DatabaseAsyncConnection) -> D
         logging.debug(f"driver connection id {connection}")
         logging.debug(f"Is sqlAlchemy connection closed? {sa_connection.closed}")
 
-        if sa_connection.engine.name != "sqlite" and connection.is_closed():
+        if sa_connection.engine.name != "sqlite" and connection.is_closed():  # pragma: no cover
             logging.debug("Driver connection is closed. Invalidating it.")
             await sa_connection.invalidate()
         else:

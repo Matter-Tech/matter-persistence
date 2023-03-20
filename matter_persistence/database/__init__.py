@@ -13,6 +13,7 @@ __all__ = [
     "InvalidPoolStateException",
     "InstanceNotFoundError",
     "InvalidActionError",
+    "InvalidDatabaseConfigurationError",
 ]
 
 from .client import DatabaseClient, DatabaseAsyncEngine
@@ -28,6 +29,7 @@ from .exceptions import (
     InvalidPoolStateException,
     InstanceNotFoundError,
     InvalidActionError,
+    InvalidDatabaseConfigurationError,
 )
 from .orm import DatabaseBaseModel
 from .session import get_or_reuse_session

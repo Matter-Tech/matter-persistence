@@ -4,7 +4,7 @@ description = "Matter persistance library."
 readme = "README.md"
 requires-python = ">=3.10"
 license = "MIT"
-keywords = []
+keywords = ["database", "orm", "migrations"]
 authors = [
     { name = "Rômulo Jales", email = "romulo@thisismatter.com" },
 ]
@@ -22,6 +22,9 @@ dependencies = [
 ]
 dynamic = ["version"]
 
+[project.scripts]
+migrations = "matter_persistence.database:migration.command"
+
 [project.urls]
 Documentation = "https://github.com/Matter-Tech/matter-persistence#readme"
 Issues = "https://github.com/Matter-Tech/matter-persistence/issues"
@@ -29,6 +32,12 @@ Source = "https://github.com/Matter-Tech/matter-persistence"
 
 [project.optional-dependencies]
 database = ["sqlalchemy[asyncio]==2.0.4"]
+
+database-migrations = ["matter-persistence[database]",
+    "alembic==1.10.1",
+    "python-dotenv==1.0.0",
+    "typer==0.7.0"]
+
 database-postgresql = [
     "matter-persistence[database]",
     "sqlalchemy[postgresql]==2.0.4",
@@ -41,9 +50,11 @@ path = "matter_persistence/__about__.py"
 [tool.hatch.envs.default]
 dependencies = [
     "matter-persistence[database]",
+    "matter-persistence[database-migrations]",
     "pytest",
     "pytest-cov",
     "pytest-asyncio",
+    "pytest-mock",
     "black",
     "mypy",
     "ruff",

@@ -5,13 +5,13 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from .client import DatabaseClient
 
-DatabaseOrmAyncSession = AsyncSession
+DatabaseOrmAsyncSession = AsyncSession
 
 
 @asynccontextmanager
 async def get_or_reuse_session(
-    session: Optional[DatabaseOrmAyncSession] = None, transactional: bool = False
-) -> DatabaseOrmAyncSession:
+    session: Optional[DatabaseOrmAsyncSession] = None, transactional: bool = False
+) -> DatabaseOrmAsyncSession:
     if session is None:
         _session = async_sessionmaker(DatabaseClient.get_engine(), expire_on_commit=False)
         if transactional:

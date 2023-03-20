@@ -15,7 +15,7 @@ class DatabaseClient:
             return
 
         kwargs = {}
-        if config.pool_size:
+        if config.pool_size:  # pragma: no cover
             cls.pool_size = config.pool_size
             kwargs.update({"pool_size": config.pool_size, "pool_recycle": 5})
 

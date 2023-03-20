@@ -22,3 +22,7 @@ class InstanceNotFoundError(DetailedException):
 
 class InvalidActionError(DetailedException):
     pass
+
+
+class InvalidDatabaseConfigurationError(DetailedException):
+    pass
