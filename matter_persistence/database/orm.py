@@ -28,9 +28,9 @@ class DatabaseBaseModel(DeclarativeBase):
             raise InvalidActionError("Can't delete a not persisted object.")
 
     @classmethod
-    def __base_query(cls, *where_clause, ordered_by: List[Union[
-        sa.Column | sa.ColumnClause]] | None = None) -> sa.Selectable:
-
+    def __base_query(
+        cls, *where_clause, ordered_by: List[Union[sa.Column | sa.ColumnClause]] | None = None
+    ) -> sa.Selectable:
         stmt = sa.select(cls)
 
         if len(where_clause) > 0:
@@ -60,11 +60,11 @@ class DatabaseBaseModel(DeclarativeBase):
 
     @classmethod
     async def list(
-            cls,
-            *where_clause,
-            limit=100,
-            offset=0,
-            ordered_by: List[Union[sa.Column | sa.ColumnClause]] | None = None,
+        cls,
+        *where_clause,
+        limit=100,
+        offset=0,
+        ordered_by: List[Union[sa.Column | sa.ColumnClause]] | None = None,
     ):
         stmt = cls.__base_query(*where_clause, ordered_by=ordered_by)
 
@@ -80,8 +80,7 @@ class DatabaseBaseModel(DeclarativeBase):
         return objects
 
     @classmethod
-    async def query(cls, *where_clause,
-                    ordered_by: List[Union[sa.Column | sa.ColumnClause]] | None = None):
+    async def query(cls, *where_clause, ordered_by: List[Union[sa.Column | sa.ColumnClause]] | None = None):
         stmt = cls.__base_query(*where_clause, ordered_by=ordered_by)
 
         async with get_or_reuse_session() as session:

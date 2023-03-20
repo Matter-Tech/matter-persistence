@@ -2,6 +2,7 @@ import pytest
 
 from .conftest import BaseOrmModel
 
+
 @pytest.mark.asyncio
 async def test_count_without_where(configure_base_class):
     b_1 = BaseOrmModel(name="item 1")
@@ -23,10 +24,10 @@ async def test_count_empty_set(configure_base_class):
 
 @pytest.mark.asyncio
 async def test_count_no_result(configure_base_class):
-
-    count = await BaseOrmModel.count(BaseOrmModel.name=="item 1")
+    count = await BaseOrmModel.count(BaseOrmModel.name == "item 1")
 
     assert count == 0
+
 
 @pytest.mark.asyncio
 async def test_count_filtered(configure_base_class):
@@ -34,6 +35,6 @@ async def test_count_filtered(configure_base_class):
     await b_1.save()
     b_2 = BaseOrmModel(name="item 2")
     await b_2.save()
-    count = await BaseOrmModel.count(BaseOrmModel.name=="item 1")
+    count = await BaseOrmModel.count(BaseOrmModel.name == "item 1")
 
     assert count == 1
