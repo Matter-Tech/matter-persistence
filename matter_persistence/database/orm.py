@@ -1,7 +1,7 @@
 from typing import Union, List
 from uuid import UUID
 
-import sqlalchemy
+import sqlalchemy as sa
 from sqlalchemy.exc import InvalidRequestError
 from sqlalchemy.orm import DeclarativeBase
 
@@ -27,6 +27,23 @@ class DatabaseBaseModel(DeclarativeBase):
         except InvalidRequestError:
             raise InvalidActionError("Can't delete a not persisted object.")
 
+    @classmethod
+    def __base_query(cls, *where_clause, ordered_by: List[Union[
+        sa.Column | sa.ColumnClause]] | None = None) -> sa.Selectable:
+
+        stmt = sa.select(cls)
+
+        if len(where_clause) > 0:
+            stmt = stmt.where(*where_clause)
+
+        if not bool(ordered_by):
+            ordered_by = getattr(cls, "default_order", [])
+
+        if bool(ordered_by):
+            stmt = stmt.order_by(*ordered_by)
+
+        return stmt
+
     @property
     def deleted(self) -> bool:
         return bool(getattr(self, "_deleted", False)) is True
@@ -43,22 +60,13 @@ class DatabaseBaseModel(DeclarativeBase):
 
     @classmethod
     async def list(
-        cls,
-        *where_clause,
-        limit=100,
-        offset=0,
-        ordered_by: List[Union[sqlalchemy.Column | sqlalchemy.ColumnClause]] | None = None,
+            cls,
+            *where_clause,
+            limit=100,
+            offset=0,
+            ordered_by: List[Union[sa.Column | sa.ColumnClause]] | None = None,
     ):
-        stmt = sqlalchemy.select(cls)
-
-        if len(where_clause) > 0:
-            stmt = stmt.where(*where_clause)
-
-        if not bool(ordered_by):
-            ordered_by = getattr(cls, "default_order", [])
-
-        if bool(ordered_by):
-            stmt = stmt.order_by(*ordered_by)
+        stmt = cls.__base_query(*where_clause, ordered_by=ordered_by)
 
         if offset:
             stmt = stmt.offset(offset)
@@ -70,3 +78,24 @@ class DatabaseBaseModel(DeclarativeBase):
             objects = result.scalars().all()
 
         return objects
+
+    @classmethod
+    async def query(cls, *where_clause,
+                    ordered_by: List[Union[sa.Column | sa.ColumnClause]] | None = None):
+        stmt = cls.__base_query(*where_clause, ordered_by=ordered_by)
+
+        async with get_or_reuse_session() as session:
+            result = await session.execute(stmt)
+            objects = result.scalars().all()
+
+        return objects
+
+    @classmethod
+    async def count(cls, *where_clause):
+        stmt = sa.select(sa.func.count()).select_from(cls).where(*where_clause)
+
+        async with get_or_reuse_session() as session:
+            result = await session.execute(stmt)
+            objects = result.one()
+
+        return objects[0]
