@@ -14,48 +14,98 @@
 pip install matter-persistence
 ```
 
-## Contributing
-
-Make sure you have all supported python versions installed in your machine:
-
-* 3.10
-* 3.11
-
-### Install hatch in your system
-
-```https://hatch.pypa.io/latest/install/```
-
-### Create the environment
+### With migration support
 
 ```console
-hatch env create
+pip install matter-persistence[database-migration]
 ```
 
-Do your changes...
-
-### Run the tests
+### With postgres support
 
 ```console
-hatch run test:test
+pip install matter-persistence[database-postgres]
 ```
 
-The command above will run the tests against all supported python versions
-installed in your machine. For testing in other operating system you may use the
-configured CI in github. 
 
-### Bump a new version
+## Usage
 
-In general, you just need to execute:
+First you need to configure your database.
+
+```python
+from matter_persistence.database import DatabaseConfig
+
+db_config = DatabaseConfig(connection_uri="sqlite:///test.db")
+```
+
+Then you need start the DatabaseClient
+
+
+```python
+from matter_persistence.database import DatabaseConfig, DatabaseClient
+
+db_config = DatabaseConfig(connection_uri="sqlite:///test.db")
+DatabaseClient.start(db_config)
+```
+
+One now have two options:
+
+* Create ORM models
+* Use the sqlalchemy connection directly
+
+### ORM models
+
+```python
+from matter_persistence.database import DatabaseBaseModel
+from sqlalchemy import Column, Integer, String
+
+class ExampleModel(DatabaseBaseModel):
+    __tablename__ = "example"
+    id = Column(Integer, primary_key=True)
+    name = Column(String)
+
+async def an_async_function():
+    example = ExampleModel(name="test")
+    await example.save()
+```
+
+### sqlalchemy connection directly
+
+```python
+from matter_persistence.database import get_or_reuse_connection
+import  sqlalchemy as sa
+
+async def another_sync_function():
+    async with get_or_reuse_connection() as conn:
+        await conn.execute(sa.text("SELECT 1"))
+```
+
+## Migrations
+
+One may use the command `migrations` to create and apply migrations.
+
+First you need to configure you database client:
+```python
+from matter_persistence.database import DatabaseConfig
+
+db_config = DatabaseConfig(connection_uri="sqlite:///test.db",
+                           migration={"path": <a path to your migrations folder>,
+                                      "models": [<a list of full qualified class path of your ORM models>]})
+```
+If models is an empty array, or you don't have changed the models, the command will create an empty migration
+and you can customize it.
+
+Then you can use the command `migrations` to create and apply migrations. You must provide the full qualified
+python path to your configuration instance
 
 ```console
-hatch version
+migrations create --config python.path.to.your.db_config.instance --message <migration name>
 ```
 
-This command will update the minor version. i.e.:
-No breaking changes and new feature has been added
-
-We are using [semantic version](https://semver.org/), if you are doing a bug fix:
-
+Then apply it, You must provide the full qualified  python path to your configuration instance:
 ```console
-hatch version fix
+migrations apply --config python.path.to.your.db_config.instance 
 ```
+
+### Contributing
+
+for contributions, check the [CONTRIBUTING.md](CONTRIBUTING.md) file
