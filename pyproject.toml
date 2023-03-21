@@ -43,6 +43,11 @@ database-postgresql = [
     "sqlalchemy[postgresql]==2.0.7",
     "asyncpg==0.27.0"]
 
+cache = ["aiocache==0.12.0"]
+
+cache-memcached = [
+    "matter-persistence[cache]",
+    "aiocache[memcached]==0.12.0"]
 
 [tool.hatch.version]
 path = "matter_persistence/__about__.py"
@@ -51,6 +56,7 @@ path = "matter_persistence/__about__.py"
 dependencies = [
     "matter-persistence[database]",
     "matter-persistence[database-migrations]",
+    "matter-persistence[cache]",
     "pytest",
     "pytest-cov",
     "pytest-asyncio",
@@ -82,6 +88,7 @@ lint = [
 [tool.hatch.envs.dockerized]
 extra-dependencies = [
     "matter-persistence[database-postgresql]",
+    "matter-persistence[cache-memcached]",
     "testcontainers"]
 
 [tool.hatch.envs.dockerized.scripts]

@@ -25,19 +25,16 @@ async def test_can_create_migration(temporary_migration_folder):
 
 @pytest.mark.asyncio
 async def test_can_create_migration_without_models(temporary_migration_folder):
-    '''It will create an empty migration'''
+    """It will create an empty migration"""
     db_config = DatabaseConfig(
         connection_uri="sqlite+aiosqlite://",
-        migration={
-            "path": temporary_migration_folder,
-            "file_template": "%%(slug)s",
-            "models": []
-        },
+        migration={"path": temporary_migration_folder, "file_template": "%%(slug)s", "models": []},
     )
 
     await async_to_sync(create_database_migration, db_config, message="empty migration")
 
     assert os.path.exists(os.path.join(temporary_migration_folder, "empty_migration.py"))
+
 
 def test_can_create_migration_from_command(temporary_migration_folder, mocker):
     db_config = DatabaseConfig(

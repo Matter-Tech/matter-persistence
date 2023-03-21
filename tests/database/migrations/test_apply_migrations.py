@@ -1,5 +1,3 @@
-import os
-
 import pytest
 
 from matter_persistence.database import DatabaseConfig
