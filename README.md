@@ -26,7 +26,17 @@ pip install matter-persistence[database-migration]
 pip install matter-persistence[database-postgres]
 ```
 
+### With cache support 
 
+```console
+pip install matter-persistence[cache]
+```
+
+### With memcached support 
+
+```console
+pip install matter-persistence[cache-memcached]
+```
 ## Usage
 
 First you need to configure your database.
@@ -105,6 +115,8 @@ Then apply it, You must provide the full qualified  python path to your configur
 ```console
 migrations apply --config python.path.to.your.db_config.instance 
 ```
+## Cache
+
 
 ### Contributing
 
