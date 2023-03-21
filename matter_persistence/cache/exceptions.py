@@ -1,5 +1,5 @@
-from matter_exceptions import DetailedException
+from matter_persistence.exceptions import MatterPersistenceError
 
 
-class InvalidCacheConfigurationError(DetailedException):
+class InvalidCacheConfigurationError(MatterPersistenceError):
     pass

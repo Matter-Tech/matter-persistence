@@ -1,9 +1,9 @@
-from matter_exceptions import DetailedException
+from matter_persistence.exceptions import MatterPersistenceError
 
 
-class InvalidProjectConfigurationError(DetailedException):
+class InvalidProjectConfigurationError(MatterPersistenceError):
     pass
 
 
-class NotSubclassDatabaseBaseModelError(DetailedException):
+class NotSubclassDatabaseBaseModelError(MatterPersistenceError):
     pass

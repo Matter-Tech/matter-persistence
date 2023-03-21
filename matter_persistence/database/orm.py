@@ -54,7 +54,7 @@ class DatabaseBaseModel(DeclarativeBase):
             obj = await session.get(cls, ident=ident)
 
         if obj is None:
-            raise InstanceNotFoundError(message=f"Object of type {cls}:{ident} not found.")
+            raise InstanceNotFoundError(f"Object of type {cls}:{ident} not found.")
 
         return obj
 

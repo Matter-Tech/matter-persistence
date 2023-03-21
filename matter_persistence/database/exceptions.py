@@ -1,28 +1,28 @@
-from matter_exceptions import DetailedException
+from matter_persistence.exceptions import MatterPersistenceError
 
 
-class DatabaseNoEngineSetException(DetailedException):
+class DatabaseNoEngineSetException(MatterPersistenceError):
     def __init__(self):
         super().__init__(
-            "The DatabaseClient does not have an engine set. " "Have you executed DatabaseClient.start(db_config)?"
+            "The DatabaseClient does not have an engine set. Have you executed DatabaseClient.start(db_config)?"
         )
 
 
-class ConnectionInTransactionException(DetailedException):
+class ConnectionInTransactionException(MatterPersistenceError):
     pass
 
 
-class InvalidPoolStateException(DetailedException):
+class InvalidPoolStateException(MatterPersistenceError):
     pass
 
 
-class InstanceNotFoundError(DetailedException):
+class InstanceNotFoundError(MatterPersistenceError):
     pass
 
 
-class InvalidActionError(DetailedException):
+class InvalidActionError(MatterPersistenceError):
     pass
 
 
-class InvalidDatabaseConfigurationError(DetailedException):
+class InvalidDatabaseConfigurationError(MatterPersistenceError):
     pass
