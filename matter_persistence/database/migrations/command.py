@@ -5,6 +5,7 @@ from alembic import command
 from alembic.config import Config
 from sqlalchemy import Connection
 
+from matter_persistence.database import DatabaseConfig
 from .utils import async_to_sync, load_db_config
 
 CONFIG_MODULE_HELP = """The full qualified module name where project's DatabaseConfig
@@ -23,6 +24,10 @@ def apply_database_migration(connection: Connection, config: Config):
     command.upgrade(config, revision="head")
 
 
+def apply_migrations(db_config: DatabaseConfig):
+    asyncio.run(async_to_sync(apply_database_migration, db_config))
+
+
 @app.command()
 def apply(config: str = typer.Option(..., help=CONFIG_MODULE_HELP, min=1, max=1)):
     """
@@ -31,7 +36,7 @@ def apply(config: str = typer.Option(..., help=CONFIG_MODULE_HELP, min=1, max=1)
     :param config: The full qualified module name where project's DatabaseConfig has been configured.
     """
     db_config = load_db_config(config)
-    asyncio.run(async_to_sync(apply_database_migration, db_config))
+    apply_migrations(db_config)
 
 
 @app.command()

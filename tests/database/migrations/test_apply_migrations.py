@@ -7,6 +7,7 @@ from matter_persistence.database.migrations.command import (
     create_database_migration,
     apply,
     create,
+    apply_migrations,
 )
 from matter_persistence.database.migrations.utils import async_to_sync
 from .conftest import has_table_been_created
@@ -49,3 +50,18 @@ def test_can_apply_migration_from_command(temporary_migration_folder, mocker):
     create("an-ignored-value", message="Another migration")
 
     apply("an-ignored-value")
+
+
+def test_can_apply_migration_using_db_config(temporary_migration_folder, mocker):
+    db_config = DatabaseConfig(
+        connection_uri="sqlite+aiosqlite://",
+        migration={
+            "path": temporary_migration_folder,
+            "models": [f"{__package__}.base_model.BaseOrmModel"],
+            "file_template": "%%(slug)s",
+        },
+    )
+    mocker.patch("matter_persistence.database.migrations.command.load_db_config", return_value=db_config)
+    create("an-ignored-value", message="Another migration")
+
+    apply_migrations(db_config)
