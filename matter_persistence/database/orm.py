@@ -29,9 +29,14 @@ class DatabaseBaseModel(DeclarativeBase):
 
     @classmethod
     def __base_query(
-        cls, *where_clause, ordered_by: List[Union[sa.Column | sa.ColumnClause]] | None = None
+        cls,
+        *where_clause,
+        select: List[Union[sa.Column | sa.ColumnClause]] | None = None,
+        ordered_by: List[Union[sa.Column | sa.ColumnClause]] | None = None,
+        group_by: List[Union[sa.Column | sa.ColumnClause]] | None = None,
+        having: List[Union[sa.Column | sa.ColumnClause]] | None = None,
     ) -> sa.Selectable:
-        stmt = sa.select(cls)
+        stmt = sa.select(*select or [cls])
 
         if len(where_clause) > 0:
             stmt = stmt.where(*where_clause)
@@ -41,6 +46,11 @@ class DatabaseBaseModel(DeclarativeBase):
 
         if bool(ordered_by):
             stmt = stmt.order_by(*ordered_by)
+
+        if bool(group_by):
+            stmt = stmt.group_by(*group_by)
+            if bool(having):
+                stmt = stmt.having(*having)
 
         return stmt
 
@@ -80,12 +90,36 @@ class DatabaseBaseModel(DeclarativeBase):
         return objects
 
     @classmethod
-    async def query(cls, *where_clause, ordered_by: List[Union[sa.Column | sa.ColumnClause]] | None = None):
-        stmt = cls.__base_query(*where_clause, ordered_by=ordered_by)
+    async def query(
+        cls,
+        *where_clause,
+        select: List[Union[sa.Column | sa.ColumnClause]] | None = None,
+        ordered_by: List[Union[sa.Column | sa.ColumnClause]] | None = None,
+        group_by: List[Union[sa.Column | sa.ColumnClause]] | None = None,
+        having: List[Union[sa.Column | sa.ColumnClause]] | None = None,
+    ):
+        stmt = cls.__base_query(*where_clause, select=select, ordered_by=ordered_by, group_by=group_by, having=having)
 
         async with get_or_reuse_session() as session:
             result = await session.execute(stmt)
             objects = result.scalars().all()
+
+        return objects
+
+    @classmethod
+    async def mapped_query(
+        cls,
+        *where_clause,
+        select: List[Union[sa.Column | sa.ColumnClause]] | None = None,
+        ordered_by: List[Union[sa.Column | sa.ColumnClause]] | None = None,
+        group_by: List[Union[sa.Column | sa.ColumnClause]] | None = None,
+        having: List[Union[sa.Column | sa.ColumnClause]] | None = None,
+    ):
+        stmt = cls.__base_query(*where_clause, select=select, ordered_by=ordered_by, group_by=group_by, having=having)
+
+        async with get_or_reuse_session() as session:
+            result = await session.execute(stmt)
+            objects = result.mappings().all()
 
         return objects
 

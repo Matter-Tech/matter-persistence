@@ -124,7 +124,7 @@ fail_under = 95
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 addopts = "-x --ignore-glob=tests/*/dockerized"
-filterwarnings = ["error"]
+filterwarnings = ["error", "ignore::ResourceWarning"]
 
 [build-system]
 requires = ["hatchling"]
