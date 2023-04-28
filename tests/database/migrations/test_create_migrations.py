@@ -61,7 +61,7 @@ async def test_can_create_migration_with_another_schema(temporary_migration_fold
             "path": temporary_migration_folder,
             "models": [f"{__package__}.base_model.BaseOrmModel"],
             "file_template": "%%(slug)s",
-            "default_schema": "another_schema",
+            "version_schema": "another_schema",
         },
     )
 

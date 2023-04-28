@@ -1,15 +1,13 @@
 import pytest as pytest
 import sqlalchemy as sa
 
-from database import DatabaseConfig, get_or_reuse_connection, DatabaseClient
-from database.migrations.command import create_database_migration
-from database.migrations.utils import async_to_sync
+from matter_persistence.database import DatabaseConfig, get_or_reuse_connection
+from matter_persistence.database.migrations.command import create_database_migration
+from matter_persistence.database.migrations.utils import async_to_sync
 
 
 @pytest.mark.asyncio
 async def test_can_create_version_table_on_the_defined_default_schema(temporary_migration_folder, pg_uri):
-    db_config = DatabaseConfig(connection_uri=pg_uri.format(engine="postgresql+asyncpg"))
-    DatabaseClient.start(db_config)
     async with get_or_reuse_connection(transactional=True) as saConnection:
         await saConnection.execute(sa.text("CREATE SCHEMA IF NOT EXISTS another_schema;"))
 
@@ -19,7 +17,7 @@ async def test_can_create_version_table_on_the_defined_default_schema(temporary_
             "path": temporary_migration_folder,
             "file_template": "%%(slug)s",
             "models": [],
-            "default_schema": "another_schema",
+            "version_schema": "another_schema",
         },
     )
 
@@ -31,7 +29,7 @@ async def test_can_create_version_table_on_the_defined_default_schema(temporary_
                 sa.text(
                     """SELECT EXISTS (
     SELECT FROM 
-        pg_tables
+        pg_tables   
     WHERE 
         schemaname = 'another_schema' AND 
         tablename  = 'alembic_version'

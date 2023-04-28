@@ -1,6 +1,7 @@
 from asyncio import sleep
 
 import pytest
+import sqlalchemy
 import sqlalchemy as sa
 
 from matter_persistence.database import get_or_reuse_connection, get_raw_driver_connection
@@ -24,7 +25,7 @@ async def test_get_raw_connection_returns_a_valid_asyncpg_object(external_connec
             raw_connection = await saConnection.get_raw_connection()
             asyncpg_connection = raw_connection.driver_connection
             is_closed_1 = asyncpg_connection.is_closed()
-    except Exception:
+    except sqlalchemy.exc.InterfaceError:
         # We wrap the call logic in a try/except construct to not raise error in the test because SQLAlchemy tries to
         # rollback a dead connection
         pass

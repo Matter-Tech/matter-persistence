@@ -17,9 +17,9 @@ target_metadata = DatabaseBaseModel.metadata
 context.configure(connection=config.attributes["connection"], target_metadata=target_metadata)
 
 with context.begin_transaction():
-    if bool(db_config.migration.default_schema):
+    if bool(db_config.migration.version_schema):
         try:
-            context.execute(f"SET search_path TO {db_config.migration.default_schema}")
+            context.execute(f"SET search_path TO {db_config.migration.version_schema}")
         except sqlalchemy.exc.OperationalError:  # pragma: no cover
             logging.warning("Database does not support schemas changing.")
     context.run_migrations()

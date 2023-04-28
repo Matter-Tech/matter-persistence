@@ -78,6 +78,19 @@ async def an_async_function():
     await example.save()
 ```
 
+If you need to define a different schema or namespace for your class you can do:
+
+```python
+from matter_persistence.database import DatabaseBaseModel
+from sqlalchemy import Column, Integer, String
+
+class ExampleModel(DatabaseBaseModel):
+    __tablename__ = "example"
+    __table_args__ = {"schema": "some_schema"}
+    
+    id = Column(Integer, primary_key=True)
+    name = Column(String)
+```
 ### sqlalchemy connection directly
 
 ```python
@@ -115,8 +128,19 @@ Then apply it, You must provide the full qualified  python path to your configur
 ```console
 migrations apply --config python.path.to.your.db_config.instance 
 ```
-## Cache
+### Schema support
 
+If you need deal with schemas in your database, you can define one for you versions:
+
+
+```python
+from matter_persistence.database import DatabaseConfig
+
+db_config = DatabaseConfig(connection_uri="sqlite:///test.db",
+                           migration={"path": <a path to your migrations folder>,
+                                      "models": [<a list of full qualified class path of your ORM models>]},
+                                      "version_schema": "another_schema")
+``` 
 
 ### Contributing
 
