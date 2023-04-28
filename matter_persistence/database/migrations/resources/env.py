@@ -1,3 +1,6 @@
+import logging
+
+import sqlalchemy
 from alembic import context
 
 from matter_persistence.database import DatabaseConfig, DatabaseBaseModel
@@ -14,4 +17,9 @@ target_metadata = DatabaseBaseModel.metadata
 context.configure(connection=config.attributes["connection"], target_metadata=target_metadata)
 
 with context.begin_transaction():
+    if bool(db_config.migration.default_schema):
+        try:
+            context.execute(f"SET search_path TO {db_config.migration.default_schema}")
+        except sqlalchemy.exc.OperationalError:  # pragma: no cover
+            logging.warning("Database does not support schemas changing.")
     context.run_migrations()

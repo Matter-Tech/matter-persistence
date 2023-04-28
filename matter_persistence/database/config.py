@@ -42,6 +42,7 @@ class DatabaseMigrationConfig(BaseModel):
     path: str
     models: List[str]
     file_template: str = FILE_NAME_TEMPLATE
+    default_schema: str | None = None
 
 
 class DatabaseConfig:

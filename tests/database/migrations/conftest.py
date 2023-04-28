@@ -1,14 +1,4 @@
-from tempfile import TemporaryDirectory
-
-import pytest
 import sqlalchemy as sa
-
-
-@pytest.fixture
-def temporary_migration_folder():
-    with TemporaryDirectory() as tmpdirname:
-        print(f"Created temporary folder for migrations: {tmpdirname}")
-        yield tmpdirname
 
 
 async def has_table_been_created(conn, table_name, expected: bool):

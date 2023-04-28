@@ -51,3 +51,20 @@ def test_can_create_migration_from_command(temporary_migration_folder, mocker):
     create("an-ignored-value", message="Another migration")
 
     assert os.path.exists(os.path.join(temporary_migration_folder, "another_migration.py"))
+
+
+@pytest.mark.asyncio
+async def test_can_create_migration_with_another_schema(temporary_migration_folder):
+    db_config = DatabaseConfig(
+        connection_uri="sqlite+aiosqlite://",
+        migration={
+            "path": temporary_migration_folder,
+            "models": [f"{__package__}.base_model.BaseOrmModel"],
+            "file_template": "%%(slug)s",
+            "default_schema": "another_schema",
+        },
+    )
+
+    await async_to_sync(create_database_migration, db_config, message="Initial migration")
+
+    assert os.path.exists(os.path.join(temporary_migration_folder, "initial_migration.py"))
