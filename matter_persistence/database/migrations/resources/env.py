@@ -14,10 +14,14 @@ for i in db_config.migration.models:
 
 target_metadata = DatabaseBaseModel.metadata
 
-context.configure(connection=config.attributes["connection"], target_metadata=target_metadata)
+has_schema_defined = bool(db_config.migration.version_schema)
+
+context.configure(connection=config.attributes["connection"],
+                  target_metadata=target_metadata,
+                  include_schemas=has_schema_defined)
 
 with context.begin_transaction():
-    if bool(db_config.migration.version_schema):
+    if has_schema_defined:
         try:
             context.execute(f"SET search_path TO {db_config.migration.version_schema}")
         except sqlalchemy.exc.OperationalError:  # pragma: no cover
