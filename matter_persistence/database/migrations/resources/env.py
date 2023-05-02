@@ -16,9 +16,9 @@ target_metadata = DatabaseBaseModel.metadata
 
 has_schema_defined = bool(db_config.migration.version_schema)
 
-context.configure(connection=config.attributes["connection"],
-                  target_metadata=target_metadata,
-                  include_schemas=has_schema_defined)
+context.configure(
+    connection=config.attributes["connection"], target_metadata=target_metadata, include_schemas=has_schema_defined
+)
 
 with context.begin_transaction():
     if has_schema_defined:
