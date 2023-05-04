@@ -40,8 +40,9 @@ database-migrations = ["matter-persistence[database]",
 
 database-postgresql = [
     "matter-persistence[database]",
-    "sqlalchemy[postgresql]==2.0.12",
-    "asyncpg==0.27.0"]
+    "sqlalchemy[postgresql_asyncpg]==2.0.12",
+    "asyncpg==0.27.0",
+    "greenlet"]
 
 cache = ["aiocache==0.12.1"]
 

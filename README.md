@@ -20,10 +20,10 @@ pip install matter-persistence
 pip install matter-persistence[database-migration]
 ```
 
-### With postgres support
+### With postgres support. Use "postgresql_asyncpg" as dependency to force Apple chip computers to use asyncpg.
 
 ```console
-pip install matter-persistence[database-postgres]
+pip install sqlalchemy[postgresql_asyncpg]
 ```
 
 ### With cache support 
