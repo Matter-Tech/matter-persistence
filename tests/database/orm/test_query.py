@@ -121,9 +121,7 @@ async def test_query_with_distinct(configure_base_class):
     b_3 = BaseOrmModel(name="item 1")
     await b_3.save()
 
-    objs = await BaseOrmModel.query(
-        select=[sa.distinct(BaseOrmModel.name)]
-    )
+    objs = await BaseOrmModel.query(select=[sa.distinct(BaseOrmModel.name)])
 
     assert len(objs) == 2
     assert objs[0] == "item 1"

@@ -1,6 +1,6 @@
 import pytest
 
-from matter_persistence.database import InstanceNotFoundError, get_or_reuse_session
+from matter_persistence.database import InstanceNotFoundError
 from .conftest import BaseOrmModel, AnotherOrmModel
 
 

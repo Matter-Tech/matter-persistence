@@ -16,7 +16,7 @@ class BaseOrmModel(DatabaseBaseModel):
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     name: Mapped[str] = mapped_column(String(30))
 
-    anothers_orm: Mapped[List['AnotherOrmModel']] = relationship(back_populates="base")
+    anothers_orm: Mapped[List["AnotherOrmModel"]] = relationship(back_populates="base")
 
 
 class AnotherOrmModel(DatabaseBaseModel):
@@ -25,9 +25,7 @@ class AnotherOrmModel(DatabaseBaseModel):
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     name: Mapped[str] = mapped_column(String(30))
 
-    base_id: Mapped[int] = mapped_column(
-        ForeignKey("base_table.id"), nullable=False
-    )
+    base_id: Mapped[int] = mapped_column(ForeignKey("base_table.id"), nullable=False)
 
     base: Mapped[BaseOrmModel] = relationship(back_populates="anothers_orm")
 
