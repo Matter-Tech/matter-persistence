@@ -110,3 +110,19 @@ async def test_mapped_query_grouped_by_with_having(configure_base_class):
     assert len(objs) == 1
     assert objs[0].name == "item 1"
     assert objs[0].amount == 2
+
+
+@pytest.mark.asyncio
+async def test_query_with_distinct(configure_base_class):
+    b_1 = BaseOrmModel(name="item 1")
+    await b_1.save()
+    b_2 = BaseOrmModel(name="item 2")
+    await b_2.save()
+    b_3 = BaseOrmModel(name="item 1")
+    await b_3.save()
+
+    objs = await BaseOrmModel.query(select=[sa.distinct(BaseOrmModel.name)])
+
+    assert len(objs) == 2
+    assert objs[0] == "item 1"
+    assert objs[1] == "item 2"
