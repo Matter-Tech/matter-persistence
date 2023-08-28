@@ -43,7 +43,7 @@ database-postgresql = [
     "sqlalchemy[postgresql]==2.0.16",
     "asyncpg==0.27.0"]
 
-cache = ["aiocache==0.12.1"]
+cache = ["aiocache==0.12.2"]
 
 cache-memcached = [
     "matter-persistence[cache]",
