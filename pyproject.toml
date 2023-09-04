@@ -34,7 +34,7 @@ Source = "https://github.com/Matter-Tech/matter-persistence"
 database = ["sqlalchemy[asyncio]==2.0.20"]
 
 database-migrations = ["matter-persistence[database]",
-    "alembic==1.11.1",
+    "alembic==1.12.0",
     "python-dotenv~=1.0",
     "typer==0.9.0"]
 
