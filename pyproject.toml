@@ -13,6 +13,7 @@ classifiers = [
     "Programming Language :: Python",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: Implementation :: CPython",
     "Programming Language :: Python :: Implementation :: PyPy",
 ]
@@ -85,6 +86,15 @@ lint = [
     #"typing",
 ]
 
+[tool.hatch.envs.test]
+python="3.10"
+
+[tool.hatch.envs.PY311]
+python="3.11"
+
+[tool.hatch.envs.PY312]
+python="3.12"
+
 [tool.hatch.envs.dockerized]
 extra-dependencies = [
     "matter-persistence[database-postgresql]",
@@ -94,11 +104,14 @@ extra-dependencies = [
 [tool.hatch.envs.dockerized.scripts]
 test = "pytest -c=pyproject.toml tests/*/dockerized"
 
+[[tool.hatch.envs.dockerized.matrix]]
+python = ["3.10", "3.11", "3.12"]
+
 [tool.hatch.metadata]
 allow-direct-references = true
 
 [tool.black]
-target-version = ["py310"]
+target-version = ["py310", "py311", "py312"]
 line-length = 120
 
 [tool.ruff]
