@@ -47,7 +47,7 @@ cache = ["aiocache==0.12.2"]
 
 cache-memcached = [
     "matter-persistence[cache]",
-    "aiocache[memcached]==0.12.1"]
+    "aiocache[memcached]==0.12.2"]
 
 [tool.hatch.version]
 path = "matter_persistence/__about__.py"
