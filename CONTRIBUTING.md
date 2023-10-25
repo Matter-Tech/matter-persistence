@@ -4,6 +4,7 @@ Make sure you have all supported python versions installed in your machine:
 
 * 3.10
 * 3.11
+* 3.12
 
 ## Install hatch in your system
 
