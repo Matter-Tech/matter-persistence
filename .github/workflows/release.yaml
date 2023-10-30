@@ -11,7 +11,7 @@ on:
 jobs:
   release-version:
     name: Release new version
-    uses: Matter-Tech/matter-library-actions/.github/workflows/release.yaml@v1
+    uses: Matter-Tech/matter-library-actions/.github/workflows/release.yaml@v2
     with:
       release-type: ${{github.event.inputs.release-type}}
     secrets:
