@@ -32,7 +32,7 @@ Issues = "https://github.com/Matter-Tech/matter-persistence/issues"
 Source = "https://github.com/Matter-Tech/matter-persistence"
 
 [project.optional-dependencies]
-database = ["sqlalchemy[asyncio]==2.0.22"]
+database = ["sqlalchemy[asyncio]==2.0.24"]
 
 database-migrations = ["matter-persistence[database]",
     "alembic==1.12.0",
