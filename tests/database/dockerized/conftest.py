@@ -39,23 +39,17 @@ def pg_uri(postgres_container):
     return f"{{engine}}://{TEST_DB_USER}:{TEST_DB_PASSWORD}@localhost:{exposed_port}/{TEST_DB_NAME}"
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture
 async def start_db_client(pg_uri):
     connection_uri = pg_uri.format(engine="postgresql+asyncpg")
     db_config = DatabaseConfig(connection_uri=connection_uri)
     DatabaseClient.start(db_config)
     yield
-    await DatabaseClient.stop()
-
-
-@pytest.fixture(scope="session")
-async def external_pool(pg_uri):
-    connection_uri = pg_uri.format(engine="postgres")
-    async with create_pool(dsn=connection_uri) as db_pool:
-        yield db_pool
 
 
 @pytest.fixture
-async def external_connection(external_pool):
-    async with external_pool.acquire() as conn:
-        yield conn
+async def external_connection(pg_uri):
+    connection_uri = pg_uri.format(engine="postgres")
+    async with create_pool(dsn=connection_uri) as db_pool:
+        async with db_pool.acquire() as conn:
+            yield conn

@@ -7,8 +7,7 @@ import sqlalchemy as sa
 from matter_persistence.database import get_or_reuse_connection, get_raw_driver_connection
 
 
-@pytest.mark.asyncio
-async def test_get_raw_connection_returns_a_valid_asyncpg_object(external_connection):
+async def test_get_raw_connection_returns_a_valid_asyncpg_object(start_db_client, external_connection):
     pid1 = None
     is_closed_1 = None
 
@@ -43,8 +42,8 @@ async def test_get_raw_connection_returns_a_valid_asyncpg_object(external_connec
 
 
 @pytest.mark.xfail
-@pytest.mark.asyncio
 async def test_derived_raw_driver_connection_directly_from_sqAlc_connection_can_lead_to_use_a_closed_asyncpg_object(
+    start_db_client,
     external_connection,
 ):
     try:

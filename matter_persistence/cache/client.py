@@ -35,6 +35,11 @@ class CacheClient:
     def get_default_object_expiration(cls):
         return cls.__default_expiration_time
 
+    @classmethod
+    def destroy(cls):
+        del cls.__cache_engine
+        cls.__cache_engine = None
+
 
 async def cache_get(key: str) -> Any:
     return await CacheClient.get_engine().get(key)

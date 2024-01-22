@@ -102,7 +102,7 @@ extra-dependencies = [
     "testcontainers"]
 
 [tool.hatch.envs.dockerized.scripts]
-test = "pytest -c=pyproject.toml tests/*/dockerized"
+test = "pytest -c=pyproject.toml tests/*/dockerized {args}"
 
 [[tool.hatch.envs.dockerized.matrix]]
 python = ["3.10", "3.11", "3.12"]
