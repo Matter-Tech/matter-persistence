@@ -11,21 +11,18 @@ def test_DatabaseClient_should_create_only_one_engine_instance(start_database_cl
     assert id(DatabaseClient.get_engine()) == id(DatabaseClient.get_engine())
 
 
-@pytest.mark.asyncio
 async def test_get_or_reuse_connection_should_create_different_concrete_connections(start_database_client):
     async with get_or_reuse_connection() as connection1:
         async with get_or_reuse_connection() as connection2:
             assert id(connection2) != id(connection1)
 
 
-@pytest.mark.asyncio
 async def test_connection_is_closed_when_leaves_the_context(start_database_client):
     async with get_or_reuse_connection() as connection:
         assert connection.closed is False
     assert connection.closed is True
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize("cut_connection", [False, True])
 async def test_connection_raises_error_when_reopening_a_closed_transaction(cut_connection, start_database_client):
     """
@@ -68,14 +65,12 @@ async def test_connection_raises_error_when_reopening_a_closed_transaction(cut_c
             raise e
 
 
-@pytest.mark.asyncio
 async def test_get_or_reuse_connection_should_reuse_the_connection_in_context(start_database_client):
     async with get_or_reuse_connection() as connection1:
         async with get_or_reuse_connection(connection1) as connection2:
             assert id(connection2) == id(connection1)
 
 
-@pytest.mark.asyncio
 async def test_get_or_reuse_connection_reused_connection_should_isolate_transactions(start_database_client):
     async with get_or_reuse_connection() as connection1:
         async with get_or_reuse_connection(connection1) as connection2:
@@ -84,14 +79,12 @@ async def test_get_or_reuse_connection_reused_connection_should_isolate_transact
                 assert connection2 == connection1
 
 
-@pytest.mark.asyncio
 async def test_get_or_reuse_connection_reuse_connection_when_open_a_transaction(start_database_client):
     async with get_or_reuse_connection() as connection1:
         async with get_or_reuse_connection(connection1, True) as connection2:
             assert connection2 == connection1
 
 
-@pytest.mark.asyncio
 async def test_get_or_reuse_connection_keeps_transaction_when_flag_is_not_set_when_reusing_a_transactional_connection(
     start_database_client,
 ):
@@ -107,7 +100,6 @@ async def test_get_or_reuse_connection_keeps_transaction_when_flag_is_not_set_wh
                 assert connection1.in_transaction() is True
 
 
-@pytest.mark.asyncio
 async def test_connection_is_no_longer_in_transaction_after_leaving_the_context(start_database_client):
     async with get_or_reuse_connection() as connection1:
         assert connection1.in_transaction() is False
@@ -119,7 +111,6 @@ async def test_connection_is_no_longer_in_transaction_after_leaving_the_context(
         assert connection1.in_transaction() is False
 
 
-@pytest.mark.asyncio
 async def test_connection_is_in_nested_transaction(start_database_client):
     """
     We make sure that transactions can be nested several times with the following being true:

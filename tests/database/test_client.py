@@ -1,5 +1,3 @@
-import pytest
-
 from matter_persistence.database import DatabaseConfig, DatabaseClient
 
 
@@ -35,7 +33,6 @@ def test_database_destroy_not_started_client():
     assert DatabaseClient.get_engine() is None
 
 
-@pytest.mark.asyncio
 async def test_database_stop_not_started_client():
     assert DatabaseClient.get_engine() is None
 

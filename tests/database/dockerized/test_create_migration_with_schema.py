@@ -1,4 +1,3 @@
-import pytest as pytest
 import sqlalchemy as sa
 
 from matter_persistence.database import DatabaseConfig, get_or_reuse_connection
@@ -6,8 +5,9 @@ from matter_persistence.database.migrations.command import create_database_migra
 from matter_persistence.database.migrations.utils import async_to_sync
 
 
-@pytest.mark.asyncio
-async def test_can_create_version_table_on_the_defined_default_schema(temporary_migration_folder, pg_uri):
+async def test_can_create_version_table_on_the_defined_default_schema(
+    start_db_client, temporary_migration_folder, pg_uri
+):
     async with get_or_reuse_connection(transactional=True) as saConnection:
         await saConnection.execute(sa.text("CREATE SCHEMA IF NOT EXISTS another_schema;"))
 

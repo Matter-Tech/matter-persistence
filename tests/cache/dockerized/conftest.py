@@ -16,9 +16,10 @@ def memcached_container():
     memcached.stop()
 
 
-@pytest.fixture(scope="session", autouse=True)
-def start_cache_client_dockerized(memcached_container):
+@pytest.fixture
+async def start_cache_client_dockerized(memcached_container):
     host, port = memcached_container.get_host_and_port()
     cache_config = CacheConfig(endpoint=host, port=port, engine=CacheEngine.MEMCACHED)
     CacheClient.start(cache_config)
     yield
+    CacheClient.destroy()
