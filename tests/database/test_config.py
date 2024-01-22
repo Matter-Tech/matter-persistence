@@ -1,7 +1,6 @@
 import itertools
 
 import pytest
-from pydantic import SecretStr
 
 from matter_persistence.database import DatabaseConfig
 from matter_persistence.database.config import build_connection_uri
@@ -15,8 +14,8 @@ def test_config_connection_uri():
 
     uri = DatabaseConfig(
         engine="sqlite",
-        username=SecretStr("a-db-user"),
-        password=SecretStr("wow what a safe password!!!! :))"),
+        username="a-db-user",
+        password="wow what a safe password!!!! :))",
         host="example.org",
         port=5432,
         dbname="a-db-name",
@@ -34,8 +33,8 @@ def test_config_connection_uri_argument_takes_precedence_over_other_args():
 
     uri = DatabaseConfig(
         engine="sqlite",
-        username=SecretStr("a-db-user"),
-        password=SecretStr("wow what a safe password!!!! :))"),
+        username="a-db-user",
+        password="wow what a safe password!!!! :))",
         host="example.org",
         port=5432,
         dbname="a-db-name",
