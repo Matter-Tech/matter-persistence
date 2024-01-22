@@ -5,4 +5,4 @@ on: push
 jobs:
   code-lint:
     name: Code Lint
-    uses: Matter-Tech/matter-library-actions/.github/workflows/lint.yaml@v1
+    uses: Matter-Tech/matter-library-actions/.github/workflows/lint.yaml@v2
