@@ -36,6 +36,7 @@ def build_connection_uri(engine, username, password, host, port, dbname):
 
 FILE_NAME_TEMPLATE = "%%(year)d%%(month).2d%%(day).2d-%%(hour).2d%%(minute).2d%%(second).2d-%%(slug)s"
 
+
 @dataclass
 class DatabaseMigrationConfig:
     path: str
@@ -49,11 +50,11 @@ class DatabaseConfig:
         self,
         engine: str | None = None,
         username: str | None = None,
-        password: str | None  = None,
-        host: str | None  = None,
-        port: int| None  = None,
-        dbname: str  | None  = None,
-        pool_size: int | None  = None,
+        password: str | None = None,
+        host: str | None = None,
+        port: int | None = None,
+        dbname: str | None = None,
+        pool_size: int | None = None,
         connection_uri: str | None = None,
         migration: DatabaseMigrationConfig | dict | None = None,
         models: list[str] | None = None,
