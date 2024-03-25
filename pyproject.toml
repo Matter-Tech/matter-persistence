@@ -36,7 +36,7 @@ database = ["sqlalchemy[asyncio]==2.0.25"]
 database-migrations = ["matter-persistence[database]",
     "alembic==1.13.1",
     "python-dotenv~=1.0",
-    "typer==0.9.0"]
+    "typer==0.10.0"]
 
 database-postgresql = [
     "matter-persistence[database]",
