@@ -1,0 +1,21 @@
+repos:
+-   repo: local
+    hooks:
+    -   id: ruff linter
+        name: ruff linter
+        language: system
+        entry: hatch run lint
+        types:
+            - python
+    -   id: ruff formatter
+        name: ruff formatter
+        language: system
+        entry: hatch run fmt
+        types:
+            - python
+    -   id: mypy static type checking
+        name: mypy static type checking
+        language: system
+        entry: hatch run mypy
+        types:
+            - python
