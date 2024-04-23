@@ -129,3 +129,5 @@ dmypy.json
 .pyre/
 
 matter-persistence\[postgress\]/
+.DS_Store
+.idea
