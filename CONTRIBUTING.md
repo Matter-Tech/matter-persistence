@@ -2,7 +2,6 @@
 
 Make sure you have all supported python versions installed in your machine:
 
-* 3.10
 * 3.11
 * 3.12
 
@@ -16,24 +15,23 @@ Make sure you have all supported python versions installed in your machine:
 hatch env create
 ```
 
+## Install pre-commit hook
+
+```console
+hatch shell && pre-commit install
+```
+
 Do your changes...
 
 ## Run the tests
 
 ```console
-hatch run test
+./run_tests.sh
 ```
 
 The command above will run the tests against all supported python versions
 installed in your machine. For testing in other operating system you may use the
-configured CI in github. 
-
-## Run the tests in a docker container (For testing Postgres integration)
-
-It is assumed you have docker installed and running in your machine.
-```console
-hatch run dockerized:test
-```
+configured CI in github.
 
 ## Formatting your code
     
@@ -41,7 +39,7 @@ hatch run dockerized:test
 hatch run fmt
 ```
 
-## Run the linters
+## Run the linter
 
 ```console
 hatch run lint
