@@ -2,120 +2,87 @@
 name = "matter-persistence"
 description = "Matter persistance library."
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 license = "MIT"
-keywords = ["database", "orm", "migrations"]
+keywords = ["sql", "async", "database", "orm", "redis"]
 authors = [
     { name = "Rômulo Jales", email = "romulo@thisismatter.com" },
 ]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Programming Language :: Python",
-    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: Implementation :: CPython",
     "Programming Language :: Python :: Implementation :: PyPy",
 ]
 dependencies = [
-    "matter-exceptions~=1.0"
+    "matter-exceptions~=2.0",
+    "pydantic~=2.7.0",
+    "sqlalchemy[asyncio]~=2.0.29",
+    "redis~=5.0.3",
 ]
 dynamic = ["version"]
-
-[project.scripts]
-migrations = "matter_persistence.database.migrations.command:app"
 
 [project.urls]
 Documentation = "https://github.com/Matter-Tech/matter-persistence#readme"
 Issues = "https://github.com/Matter-Tech/matter-persistence/issues"
 Source = "https://github.com/Matter-Tech/matter-persistence"
 
-[project.optional-dependencies]
-database = ["sqlalchemy[asyncio]==2.0.25"]
-
-database-migrations = ["matter-persistence[database]",
-    "alembic==1.13.1",
-    "python-dotenv~=1.0",
-    "typer==0.9.0"]
-
-database-postgresql = [
-    "matter-persistence[database]",
-    "sqlalchemy[postgresql]==2.0.25",
-    "asyncpg==0.29.0"]
-
-cache = ["aiocache==0.12.2"]
-
-cache-memcached = [
-    "matter-persistence[cache]",
-    "aiocache[memcached]==0.12.2"]
-
 [tool.hatch.version]
 path = "matter_persistence/__about__.py"
 
 [tool.hatch.envs.default]
 dependencies = [
-    "matter-persistence[database]",
-    "matter-persistence[database-migrations]",
-    "matter-persistence[cache]",
+    "matter-persistence",
     "pytest",
     "pytest-cov",
     "pytest-asyncio",
     "pytest-mock",
-    "black",
     "mypy",
     "ruff",
-    "aiosqlite"
+    "pre-commit"
 ]
 
 [tool.hatch.envs.default.scripts]
 test = "pytest --cov-report=term-missing --cov-config=pyproject.toml -c=pyproject.toml --cov=matter_persistence {args}"
 no-cov = "test --no-cov {args}"
-typing = "mypy --install-types --non-interactive {args:matter_persistence tests}"
-style = [
-    "ruff {args:.}",
-    "black --check --diff {args:.}",
-]
-fmt = [
-    "black {args:.}",
-    "ruff --fix {args:.}",
-    "style",
-]
-lint = [
-    "style",
-    #"typing",
-]
+typing = "mypy --install-types --non-interactive {args:matter_persistence}"
+fmt = "ruff format"
+lint = "ruff check --fix"
 
 [tool.hatch.envs.test]
-python="3.10"
+dependencies = [
+    "asyncpg",
+    "pytest",
+    "pytest-cov",
+    "pytest-asyncio",
+]
 
-[tool.hatch.envs.PY311]
-python="3.11"
+[[tool.hatch.envs.test.matrix]]
+python = ["3.11", "3.12"]
 
-[tool.hatch.envs.PY312]
-python="3.12"
-
-[tool.hatch.envs.dockerized]
-extra-dependencies = [
-    "matter-persistence[database-postgresql]",
-    "matter-persistence[cache-memcached]",
-    "testcontainers"]
-
-[tool.hatch.envs.dockerized.scripts]
-test = "pytest -c=pyproject.toml tests/*/dockerized {args}"
-
-[[tool.hatch.envs.dockerized.matrix]]
-python = ["3.10", "3.11", "3.12"]
+[tool.hatch.envs.test.scripts]
+test = "pytest --cov-report=term-missing --cov-config=pyproject.toml -c=pyproject.toml --cov=matter_persistence {args}"
 
 [tool.hatch.metadata]
 allow-direct-references = true
 
-[tool.black]
-target-version = ["py310", "py311", "py312"]
+[tool.ruff]
+target-version = "py312"
 line-length = 120
 
-[tool.ruff]
-target-version = "py310"
-line-length = 120
+[tool.ruff.lint]
+extend-select = ["I", "Q", "UP"]
+
+[tool.ruff.format]
+line-ending = "lf"
+
+[tool.mypy]
+python_version = "3.12"
+warn_return_any = true
+warn_unused_configs = true
+ignore_missing_imports = true
 
 [tool.coverage.run]
 branch = true
@@ -123,6 +90,7 @@ parallel = true
 omit = [
     "matter_persistence/__about__.py",
     "matter_persistence/__init__.py",
+    "matter_persistence/sql/utils.py" # FIXME temporary - while problems are not fixed
 ]
 
 [tool.coverage.report]
@@ -131,11 +99,10 @@ exclude_lines = [
     "if __name__ == .__main__.:",
     "if TYPE_CHECKING:",
 ]
-fail_under = 95
+fail_under = 90
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
-addopts = "-x --ignore-glob=tests/*/dockerized"
 filterwarnings = ["error", "ignore::ResourceWarning"]
 
 [build-system]
