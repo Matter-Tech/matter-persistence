@@ -4,7 +4,7 @@ repos:
     -   id: ruff linter
         name: ruff linter
         language: system
-        entry: bash -c "./scripts/run_with_local_venv.sh ruff check --fix"
+        entry: bash -c "./scripts/run_with_local_venv.sh ruff check matter_persistence --fix"
         types:
             - python
     -   id: ruff formatter
