@@ -4,18 +4,18 @@ repos:
     -   id: ruff linter
         name: ruff linter
         language: system
-        entry: bash -c "./scripts/run_with_local_venv.sh lint"
+        entry: bash -c "./scripts/run_with_local_venv.sh ruff check --fix"
         types:
             - python
     -   id: ruff formatter
         name: ruff formatter
         language: system
-        entry: bash -c "./scripts/run_with_local_venv.sh fmt"
+        entry: bash -c "./scripts/run_with_local_venv.sh ruff format"
         types:
             - python
     - id: mypy static type checker
       name: mypy static type checker
       language: system
-      entry: bash -c "./scripts/run_with_local_venv.sh typing"
+      entry: bash -c "./scripts/run_with_local_venv.sh mypy --install-types --non-interactive matter_persistence"
       types:
           - python
