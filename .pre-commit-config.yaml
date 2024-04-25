@@ -10,12 +10,12 @@ repos:
     -   id: ruff formatter
         name: ruff formatter
         language: system
-        entry: bash -c "./scripts/run_with_local_venv.sh ruff fmt"
+        entry: bash -c "./scripts/run_with_local_venv.sh fmt"
         types:
             - python
     - id: mypy static type checker
       name: mypy static type checker
       language: system
-      entry: bash -c "./scripts/run_with_local_venv.sh ruff typing"
+      entry: bash -c "./scripts/run_with_local_venv.sh typing"
       types:
           - python
