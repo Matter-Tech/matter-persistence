@@ -1,9 +1,9 @@
 from datetime import UTC, datetime, timedelta
 from hashlib import sha1
-from typing import Any
 from uuid import UUID
 
-from .models import CacheRecordModel
+from matter_persistence.base import Model
+from matter_persistence.redis.base import CacheRecordModel
 
 
 class CacheHelper:
@@ -12,8 +12,8 @@ class CacheHelper:
         cls,
         organization_id: UUID,
         internal_id: str,
-        value: Any,
-        object_class: object | None = None,
+        value: type[Model],
+        object_class: type[Model] | None = None,
         expiration_in_seconds: int | None = None,
     ) -> CacheRecordModel:
         hash_key = cls.create_hash_key(
@@ -33,7 +33,7 @@ class CacheHelper:
         )
 
     @classmethod
-    def create_hash_key(cls, organization_id: UUID, internal_id: str, object_class: object | None = None) -> str:
+    def create_hash_key(cls, organization_id: UUID, internal_id: str, object_class: type[Model] | None = None) -> str:
         key = cls.__get_object_hashkey(internal_id)
         if object_class:
             key = f"{organization_id}_{object_class.__name__}_{key}"

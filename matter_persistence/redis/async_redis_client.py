@@ -1,3 +1,4 @@
+from datetime import timedelta
 from functools import lru_cache
 
 from redis import asyncio as aioredis
@@ -87,7 +88,7 @@ class AsyncRedisClient:
         await self.connection.aclose()
 
     @retry_if_failed
-    async def set_value(self, key, value, ttl=None):
+    async def set_value(self, key: str, value: str, ttl=None):
         result = await self.connection.set(key, value)
         if ttl is not None:
             await self.connection.expire(key, ttl)
@@ -95,35 +96,35 @@ class AsyncRedisClient:
         return result
 
     @retry_if_failed
-    async def get_value(self, key):
+    async def get_value(self, key: str):
         return await self.connection.get(key)
 
     @retry_if_failed
-    async def set_hash_field(self, hash_key, field, value, ttl=None):
-        result = await self.connection.hset(hash_key, field, value)
+    async def set_hash_field(self, hash_key: str, field: str, value: str, ttl: int | timedelta | None = None):
+        result = await self.connection.hset(hash_key, field, value)  # type: ignore
         if ttl is not None:
             await self.connection.expire(hash_key, ttl)
 
         return result
 
     @retry_if_failed
-    async def get_hash_field(self, hash_key, field):
-        return await self.connection.hget(hash_key, field)
+    async def get_hash_field(self, hash_key: str, field: str):
+        return await self.connection.hget(hash_key, field)  # type: ignore
 
     @retry_if_failed
-    async def get_all_hash_fields(self, hash_key):
-        return await self.connection.hgetall(hash_key)
+    async def get_all_hash_fields(self, hash_key: str):
+        return await self.connection.hgetall(hash_key)  # type: ignore
 
     @retry_if_failed
-    async def delete_key(self, key):
+    async def delete_key(self, key: str):
         return await self.connection.delete(key)
 
     @retry_if_failed
-    async def exists(self, key_or_hash, field=None):
+    async def exists(self, key_or_hash: str, field: str | None = None):
         if field is None:
             return await self.connection.exists(key_or_hash)
         else:
-            return await self.connection.hexists(key_or_hash, field)
+            return await self.connection.hexists(key_or_hash, field)  # type: ignore
 
     @retry_if_failed
     async def is_alive(self):
