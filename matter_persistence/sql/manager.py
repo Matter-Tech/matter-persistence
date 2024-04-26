@@ -12,23 +12,23 @@ from sqlalchemy.ext.asyncio import (
 from matter_persistence.sql.exceptions import DatabaseNoEngineSetError
 
 
-class DatabaseSessionManager:
+class DatabaseManager:
     """
-    Class: DatabaseSessionManager
+    Class: DatabaseManager
 
     A class for managing database connections in an asynchronous manner.
 
     Methods:
     - __init__(self, host: str, engine_kwargs: dict[str, Any] = {}):
-        Initializes the DatabaseSessionManager object with the given host and optional engine arguments.
+        Initializes the DatabaseManager object with the given host and optional engine arguments.
         Args:
             - host (str): The host name or connection URI of the database.
             - engine_kwargs (dict[str, Any]): Optional keyword arguments to be passed to the create_async_engine function.
 
-    - __aenter__(self) -> DatabaseSessionManager:
+    - __aenter__(self) -> DatabaseManager:
         Async context manager method for entering a context.
         Returns:
-            - DatabaseSessionManager: The current DatabaseSessionManager object.
+            - DatabaseManager: The current DatabaseManager object.
 
     - __aexit__(self, exc_type, exc_value, traceback):
         Async context manager method for exiting a context.
@@ -40,21 +40,21 @@ class DatabaseSessionManager:
     - close(self):
         Closes the database session manager.
         Raises:
-            - Exception: If the DatabaseSessionManager is not initialized.
+            - Exception: If the DatabaseManager is not initialized.
 
     - connect(self) -> AsyncIterator[AsyncConnection]:
         Async context manager for creating and managing a database connection.
         Yields:
             - AsyncConnection: The database connection object.
         Raises:
-            - DatabaseNoEngineSetError: If the DatabaseSessionManager is not initialized.
+            - DatabaseNoEngineSetError: If the DatabaseManager is not initialized.
 
     - session(self) -> AsyncIterator[AsyncSession]:
         Async context manager for creating and managing a database session.
         Yields:
             - AsyncSession: The database session object.
         Raises:
-            - DatabaseNoEngineSetError: If the DatabaseSessionManager is not initialized.
+            - DatabaseNoEngineSetError: If the DatabaseManager is not initialized.
 
     """
 
@@ -70,7 +70,7 @@ class DatabaseSessionManager:
 
     async def close(self):
         if self._engine is None:
-            raise Exception("DatabaseSessionManager is not initialized")
+            raise Exception("DatabaseManager is not initialized")
         await self._engine.dispose()
 
         self._engine = None
@@ -80,7 +80,7 @@ class DatabaseSessionManager:
     async def connect(self) -> AsyncIterator[AsyncConnection]:
         if self._engine is None:
             raise DatabaseNoEngineSetError(
-                description="DatabaseSessionManager is not initialized",
+                description="DatabaseManager is not initialized",
             )
 
         async with self._engine.begin() as connection:
@@ -94,7 +94,7 @@ class DatabaseSessionManager:
     async def session(self) -> AsyncIterator[AsyncSession]:
         if self._sessionmaker is None:
             raise DatabaseNoEngineSetError(
-                description="DatabaseSessionManager is not initialized",
+                description="DatabaseManager is not initialized",
             )
 
         session = self._sessionmaker()

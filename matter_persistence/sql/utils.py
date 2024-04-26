@@ -1,23 +1,22 @@
 import logging
-from typing import Any
 
 import sqlalchemy as sa
 from sqlalchemy.orm import Query, joinedload
 
-from matter_persistence.sql.decorators import retry_if_failed
+from matter_persistence.decorators import retry_if_failed
+from matter_persistence.sql.base import CustomBase, SortMethodModel
 from matter_persistence.sql.exceptions import DatabaseInvalidSortFieldError, DatabaseNoEngineSetError
-from matter_persistence.sql.models import BaseDBModel, SortMethodModel
-from matter_persistence.sql.sessions import AsyncSession, DatabaseSessionManager
+from matter_persistence.sql.manager import AsyncSession, DatabaseManager
 
 
-async def is_database_alive(database_session_manager: DatabaseSessionManager) -> bool:
+async def is_database_alive(database_manager: DatabaseManager):
     """
     Checks if the database is alive or not.
     """
     # many times it is possible to open a connection but the database can't execute a query. Thus,
     # we test also if the query returns the expected result.
     try:
-        async with database_session_manager.session() as session:
+        async with database_manager.session() as session:
             resp = await session.execute(sa.text("SELECT 1"))
             db_result = resp.scalar()
     except DatabaseNoEngineSetError:
@@ -27,11 +26,11 @@ async def is_database_alive(database_session_manager: DatabaseSessionManager) ->
     return db_result == 1
 
 
-async def table_exists(name: str, database_session_manager: DatabaseSessionManager):
+async def table_exists(name: str, database_manager: DatabaseManager):
     """
     Checks if a table exists.
     """
-    async with database_session_manager.connect() as conn:
+    async with database_manager.connect() as conn:
         # Using the inspect() function directly on an AsyncConnection or AsyncEngine object is not currently supported,
         # as there is not yet an awaitable form of the Inspector object available.
         # https://docs.sqlalchemy.org/en/20/errors.html#error-xd3s
@@ -40,20 +39,20 @@ async def table_exists(name: str, database_session_manager: DatabaseSessionManag
     return name in table_names
 
 
-def create_table(model_class, database_session_manager: DatabaseSessionManager):
-    model_class.__table__.create(database_session_manager._engine)
+def create_table(model_class, database_manager: DatabaseManager):
+    model_class.__table__.create(database_manager._engine)
 
 
 @retry_if_failed
 async def get(
     session: AsyncSession,
-    statement: sa.Select[Any],
-    object_class: type[BaseDBModel] | None = None,
+    statement: sa.Select,
+    object_class: type[CustomBase] | None = None,
     one_or_none: bool = False,
     with_deleted: bool = False,
 ):
     result = (
-        (await session.execute(statement.where(sa.and_(object_class.deleted_at.is_(None)))))
+        (await session.execute(statement.where(sa.and_(object_class.deleted.is_(None)))))
         if (object_class and not with_deleted)
         else (await session.execute(statement))
     )
@@ -67,7 +66,7 @@ async def get(
 @retry_if_failed
 async def find(
     session: AsyncSession,
-    db_model: type[BaseDBModel],
+    db_model: type[CustomBase],
     skip: int = 0,
     limit: int | None = None,
     one_or_none: bool = False,
@@ -87,10 +86,10 @@ async def find(
 
     for key, value in filters.items():
         if hasattr(db_model, key):
-            q = q.filter(getattr(db_model, key) == value)
+            q = q.filter(getattr(db_model, key) == value)  # TODO handle other operators too, e.g. gte
 
     if not with_deleted:
-        q = q.filter(db_model.deleted_at.is_(None))
+        q = q.filter(db_model.deleted.is_(None))
 
     if sort_field is not None:
         try:
@@ -112,11 +111,9 @@ async def find(
 
     result = await session.execute(q)
     if one_or_none:
-        items = result.scalar_one_or_none()
+        return result.scalar_one_or_none().all()  # type: ignore
     else:
-        items = result.all()
-
-    return items
+        return result.scalars().all()
 
 
 @retry_if_failed

@@ -2,8 +2,7 @@ from datetime import UTC, datetime, timedelta
 from hashlib import sha1
 from uuid import UUID
 
-from matter_persistence.base import Model
-from matter_persistence.redis.base import CacheRecordModel
+from matter_persistence.redis.base import CacheRecordModel, Model
 
 
 class CacheHelper:

@@ -3,7 +3,7 @@ from functools import lru_cache
 
 from redis import asyncio as aioredis
 
-from matter_persistence.redis.decorators import retry_if_failed
+from matter_persistence.decorators import retry_if_failed
 
 
 @lru_cache(maxsize=1)

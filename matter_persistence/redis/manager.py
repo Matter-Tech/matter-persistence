@@ -1,8 +1,10 @@
+from typing import Any
 from uuid import UUID
 
-from matter_persistence.base import Model
+from orjson import loads
+
 from matter_persistence.redis.async_redis_client import AsyncRedisClient, get_connection_pool
-from matter_persistence.redis.base import CacheRecordModel
+from matter_persistence.redis.base import CacheRecordModel, Model
 from matter_persistence.redis.cache_helper import CacheHelper
 from matter_persistence.redis.exceptions import (
     CacheRecordNotFoundError,
@@ -12,7 +14,8 @@ from matter_persistence.redis.exceptions import (
 
 class CacheManager:
     """
-    CacheManager class is responsible for interacting with a cache client to save, retrieve, delete, and check the existence of cache records.
+    CacheManager class is responsible for interacting with a cache client to save, retrieve, delete,
+    and check the existence of cache records.
 
     Methods:
     - __get_cache_client: Private method to get the cache client.
@@ -45,17 +48,17 @@ class CacheManager:
         """
         await self.__connection_pool.aclose()
 
-    async def save_pydantic_object(
+    async def save_value(
         self,
         organization_id: UUID,
         internal_id: int | str | UUID,
-        value: type[Model],
+        value: type[Model] | Any,
         object_class: type[Model] | None = None,
         expiration_in_seconds: int | None = None,
-        **kwargs,  # they are passed to cache_record.to_json()
+        **kwargs,  # they are passed to cache_record.model_dump_json()
     ):
         """
-        Saves a pydantic object to the cache with an optional expiration time.
+        Saves value to the cache with an optional expiration time.
         """
         cache_record = CacheHelper.create_cache_record(
             organization_id=organization_id,
@@ -68,11 +71,11 @@ class CacheManager:
             if expiration_in_seconds:
                 result = await cache_client.set_value(
                     cache_record.hash_key,
-                    cache_record.to_json(**kwargs),
+                    cache_record.model_dump_json(**kwargs),
                     ttl=expiration_in_seconds,
                 )
             else:
-                result = await cache_client.set_value(cache_record.hash_key, cache_record.to_json(**kwargs))
+                result = await cache_client.set_value(cache_record.hash_key, cache_record.model_dump_json(**kwargs))
 
         if not result:
             raise CacheRecordNotSavedError(
@@ -80,15 +83,15 @@ class CacheManager:
                 detail=cache_record,
             )
 
-    async def find_pydantic_object(
+    async def get_value(
         self,
         organization_id: UUID,
         internal_id: int | str | UUID,
         object_class: type[Model],
-        **kwargs,  # they are passed to CacheRecordModel.from_json()
+        **kwargs,  # they are passed to CacheRecordModel.model_validate_json()
     ):
         """
-        Finds a pydantic object in the cache with an optional expiration time.
+        Gets a value from the cache.
         """
         key = CacheHelper.create_hash_key(
             organization_id=organization_id,
@@ -104,16 +107,16 @@ class CacheManager:
                 detail=cache_record_json,
             )
 
-        return CacheRecordModel.from_json(cache_record_json)
+        return CacheRecordModel.model_validate(loads(cache_record_json))
 
-    async def delete_pydantic_object(
+    async def delete_value(
         self,
         organization_id: UUID,
         internal_id: int | str | UUID,
         object_class: type[Model] | None = None,
     ):
         """
-        Deletes a pydantic object in the cache with an optional expiration time.
+        Deletes a value from the cache.
         """
         key = CacheHelper.create_hash_key(
             organization_id=organization_id,
