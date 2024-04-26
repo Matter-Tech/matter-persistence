@@ -4,7 +4,7 @@ import pytest
 from pydantic import BaseModel
 from pytest_asyncio import is_async_test
 
-from matter_persistence.redis.api_cache_client import APICacheClient
+from matter_persistence.redis.manager import CacheManager
 
 ORGANISATION_ID = uuid4()
 INTERNAL_ID = uuid4()
@@ -33,5 +33,5 @@ def test_dto():
 
 
 @pytest.fixture(scope="session")
-def api_cache_client():
-    return APICacheClient(host="localhost", port=6379)
+def cache_manager():
+    return CacheManager(host="localhost", port=6379)

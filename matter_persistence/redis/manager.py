@@ -19,9 +19,9 @@ class CacheManager:
 
     Methods:
     - __get_cache_client: Private method to get the cache client.
-    - save_pydantic_object: Saves a pydantic object to the cache with an optional expiration time.
-    - find_pydantic_object: Retrieves a pydantic object from the cache.
-    - delete_pydantic_object: Deletes a pydantic object from the cache.
+    - save_value: Saves a value to the cache with an optional expiration time.
+    - get_value: Retrieves a value from the cache.
+    - delete_value: Deletes a value from the cache.
     - cache_record_exists: Checks if a cache record exists.
     - is_cache_alive: Checks if the cache client is alive.
 

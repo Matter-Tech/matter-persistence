@@ -1,7 +1,7 @@
 import logging
 
 import sqlalchemy as sa
-from sqlalchemy.orm import Query, joinedload
+from sqlalchemy.orm import joinedload
 
 from matter_persistence.decorators import retry_if_failed
 from matter_persistence.sql.base import CustomBase, SortMethodModel
@@ -39,10 +39,6 @@ async def table_exists(name: str, database_manager: DatabaseManager):
     return name in table_names
 
 
-def create_table(model_class, database_manager: DatabaseManager):
-    model_class.__table__.create(database_manager._engine)
-
-
 @retry_if_failed
 async def get(
     session: AsyncSession,
@@ -76,7 +72,7 @@ async def find(
     sort_method: SortMethodModel | None = None,
     joined_field: str | None = None,
 ):
-    q: Query = Query(db_model)
+    q: sa.Select = sa.select(db_model)  # Query is deprecated, hence using Select
 
     if joined_field:
         q = q.options(joinedload(getattr(db_model, joined_field)))
