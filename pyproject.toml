@@ -21,6 +21,8 @@ dependencies = [
     "pydantic~=2.7.0",
     "sqlalchemy[asyncio]~=2.0.29",
     "redis~=5.0.3",
+    "orjson~=3.10.1",
+    "sqlalchemy-utils~=0.41.2"
 ]
 dynamic = ["version"]
 
@@ -38,11 +40,14 @@ dependencies = [
     "pytest",
     "pytest-cov",
     "pytest-asyncio",
-    "pytest-mock",
     "mypy",
     "ruff",
     "pre-commit"
 ]
+path = ".venv"
+
+[project.optional-dependencies]
+examples = ["notebook"]
 
 [tool.hatch.envs.default.scripts]
 test = "pytest --cov-report=term-missing --cov-config=pyproject.toml -c=pyproject.toml --cov=matter_persistence {args}"
