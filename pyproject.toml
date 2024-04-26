@@ -4,7 +4,7 @@ description = "Matter persistance library."
 readme = "README.md"
 requires-python = ">=3.11"
 license = "MIT"
-keywords = ["sql", "async", "database", "orm", "redis"]
+keywords = ["async", "sql", "orm", "redis", "pydantic"]
 authors = [
     { name = "Rômulo Jales", email = "romulo@thisismatter.com" },
 ]
@@ -44,7 +44,7 @@ dependencies = [
     "ruff",
     "pre-commit"
 ]
-path = ".venv"
+path = ".venv"  # having the venv in the same repo makes setting up pre-commit easier
 
 [project.optional-dependencies]
 examples = ["notebook"]
@@ -95,7 +95,6 @@ parallel = true
 omit = [
     "matter_persistence/__about__.py",
     "matter_persistence/__init__.py",
-    "matter_persistence/sql/utils.py" # FIXME temporary - while problems are not fixed
 ]
 
 [tool.coverage.report]
