@@ -81,6 +81,7 @@ line-length = 120
 
 [tool.ruff.lint]
 extend-select = ["I", "Q", "UP"]
+exclude =  ["tests"]
 
 [tool.ruff.format]
 line-ending = "lf"
