@@ -1,4 +1,4 @@
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from hashlib import sha1
 from uuid import UUID
 
@@ -28,7 +28,8 @@ class CacheHelper:
             value=value,
             expiration=None
             if not expiration_in_seconds
-            else (datetime.now(tz=UTC) + timedelta(seconds=expiration_in_seconds)),
+            # since we are supporting py3.10, we cannot use "from datetime import UTC"
+            else (datetime.now(tz=timezone.utc) + timedelta(seconds=expiration_in_seconds)),  # noqa: UP017
         )
 
     @classmethod
