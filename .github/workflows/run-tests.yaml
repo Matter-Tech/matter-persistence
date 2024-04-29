@@ -3,14 +3,14 @@ name: Test suite
 on: push
 
 jobs:
-  run-test:
-    runs-on: ubuntu-latest  # same as in the invoked workflow
-    steps:
-      - name: Set up testing environment (Redis instance)
-        run: docker compose up -d
+  setup-test-dependencies:
+    name: Set up Redis (and Postgres) instance
+    uses: Matter-Tech/matter-library-actions/.github/workflows/setup-test-deps.yaml@topic/make-setup-and-teardown-reusable-workflows
 
-      - name: Run tests
-        uses: Matter-Tech/matter-library-actions/.github/workflows/run-tests.yaml@v2
+  run-tests:
+    name: Run tests
+    uses: Matter-Tech/matter-library-actions/.github/workflows/run-tests.yaml@v2
 
-      - name: Tear down environment (Redis instance)
-        run: docker compose down -v
+  teardown-test-dependencies:
+    name: Tear down Redis (and Postgres) instance
+    uses: Matter-Tech/matter-library-actions/.github/workflows/teardown-test-deps.yaml@topic/make-setup-and-teardown-reusable-workflows
