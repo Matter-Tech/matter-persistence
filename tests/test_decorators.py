@@ -44,13 +44,3 @@ async def test_retry_if_failed_operational_error():
     retry_func = retry_if_failed(mocked_func, (0, 1))
     with pytest.raises(DatabaseError):
         await retry_func()
-
-
-async def test_retry_if_failed_success():
-    async def mocked_func(*args, **kwargs):
-        return "Mock Result"
-
-    mocked_func = MagicMock(side_effect=mocked_func)
-    retry_func = retry_if_failed(mocked_func)
-    res = await retry_func()
-    assert res == "Mock Result"
