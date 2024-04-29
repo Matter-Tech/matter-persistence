@@ -12,6 +12,9 @@ jobs:
     needs: setup
     runs-on: ubuntu-latest
     steps:
+      - name: Code checkout
+        uses: actions/checkout@v4
+
       - name: Set up test dependencies
         run: docker compose up -d
 
