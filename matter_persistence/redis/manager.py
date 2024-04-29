@@ -87,7 +87,7 @@ class CacheManager:
         self,
         organization_id: UUID,
         internal_id: int | str | UUID,
-        object_class: type[Model],
+        object_class: type[Model] | None = None,
         **kwargs,  # they are passed to CacheRecordModel.model_validate_json()
     ):
         """
