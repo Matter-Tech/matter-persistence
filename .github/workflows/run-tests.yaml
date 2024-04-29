@@ -3,14 +3,54 @@ name: Test suite
 on: push
 
 jobs:
-  setup-test-dependencies:
-    name: Set up Redis (and Postgres) instance
-    uses: Matter-Tech/matter-library-actions/.github/workflows/setup-test-deps.yaml@topic/make-setup-and-teardown-reusable-workflows
+  setup:
+    name: Configure environment
+    strategy:
+      matrix:
+        os: [ ubuntu-latest ]
+        python-version: [ "3.10", "3.11", "3.12"  ]
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Code checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+          cache-dependency-path: pyproject.toml
+      - name: Installing Hatch
+        run: pip install --upgrade hatch
 
   run-tests:
-    name: Run tests
-    uses: Matter-Tech/matter-library-actions/.github/workflows/run-tests.yaml@v2
+    name: Tests
+    needs: setup
+    strategy:
+      matrix:
+        os: [ ubuntu-latest ]
+        python-version: [ "3.11", "3.12" ]
+    runs-on: ${{ matrix.os }}
 
-  teardown-test-dependencies:
-    name: Tear down Redis (and Postgres) instance
-    uses: Matter-Tech/matter-library-actions/.github/workflows/teardown-test-deps.yaml@topic/make-setup-and-teardown-reusable-workflows
+    steps:
+      - name: Code checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+          cache-dependency-path: pyproject.toml
+
+      - name: Installing building dependencies for Linux
+        run: |
+          sudo apt update && sudo apt-get install -f libcurl4-openssl-dev libssl-dev
+
+
+      - name: Installing Hatch
+        run: pip install --upgrade hatch
+
+      - name: Running tests
+        run: hatch run test:test
