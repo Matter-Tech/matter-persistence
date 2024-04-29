@@ -62,6 +62,7 @@ dependencies = [
     "pytest",
     "pytest-cov",
     "pytest-asyncio",
+    "testcontainers",
 ]
 
 [[tool.hatch.envs.test.matrix]]
