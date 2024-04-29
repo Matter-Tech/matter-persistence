@@ -44,3 +44,10 @@ hatch run fmt
 ```console
 hatch run lint
 ```
+
+
+## Run static type checker
+
+```console
+hatch run typing
+```
