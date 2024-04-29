@@ -4,29 +4,13 @@ on: push
 
 jobs:
   run-test:
-    name: Run tests
-    uses: Matter-Tech/matter-library-actions/.github/workflows/run-tests.yaml@v2
-
-  run-dockerized-test:
-    name: Run the tests that requires docker
-    strategy:
-      matrix:
-        os: [ ubuntu-latest ]
-        python-version: [ "3.10", "3.11", "3.12" ]
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest  # same as in the invoked workflow
     steps:
-      - name: Code checkout
-        uses: actions/checkout@v4
+      - name: Set up testing environment (Redis instance)
+        run: docker compose up -d
 
-      - name: Installing Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v5
-        with:
-          python-version: ${{ matrix.python-version }}
-          cache: 'pip'
-          cache-dependency-path: pyproject.toml
+      - name: Run tests
+        uses: Matter-Tech/matter-library-actions/.github/workflows/run-tests.yaml@v2
 
-      - name: Installing Hatch
-        run: pip install --upgrade hatch
-
-      - name: Running tests
-        run: hatch run +py=${{ matrix.python-version }} dockerized:test
+      - name: Tear down environment (Redis instance)
+        run: docker compose down -v
