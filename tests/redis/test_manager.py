@@ -16,6 +16,12 @@ async def test_cache_manager_save_and_get(cache_manager, test_dto):
     assert res.value["test_field"] == test_dto.test_field
 
 
+async def test_cache_manager_save_and_get_without_object_class(cache_manager, test_dto):
+    await cache_manager.save_value(ORGANISATION_ID, INTERNAL_ID, test_dto)
+    res = await cache_manager.get_value(ORGANISATION_ID, INTERNAL_ID)
+    assert res.value["test_field"] == test_dto.test_field
+
+
 async def test_cache_manager_save_and_get_with_expiration_success(cache_manager, test_dto):
     await cache_manager.save_value(ORGANISATION_ID, INTERNAL_ID, test_dto, TestDTO)
     await asyncio.sleep(0.5)
