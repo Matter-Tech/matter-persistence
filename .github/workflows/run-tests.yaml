@@ -48,9 +48,14 @@ jobs:
         run: |
           sudo apt update && sudo apt-get install -f libcurl4-openssl-dev libssl-dev
 
-
       - name: Installing Hatch
         run: pip install --upgrade hatch
 
+      - name: Set up test dependencies
+        run: docker compose up -d
+
       - name: Running tests
         run: hatch run test:test
+
+      - name: Tear down test dependencies
+        run: docker compose down -v
