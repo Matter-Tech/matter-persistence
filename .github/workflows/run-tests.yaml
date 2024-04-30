@@ -3,37 +3,6 @@ name: Test suite
 on: push
 
 jobs:
-  run-tests:
+  run-test:
     name: Run tests
-    strategy:
-      matrix:
-        os: [ ubuntu-latest ]
-        python-version: [ "3.11", "3.12" ]
-    runs-on: ${{ matrix.os }}
-
-    steps:
-      - name: Code checkout
-        uses: actions/checkout@v4
-
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v5
-
-        with:
-          python-version: ${{ matrix.python-version }}
-          cache: pip
-          cache-dependency-path: pyproject.toml
-
-      - name: Installing Hatch
-        run: pip install --upgrade hatch
-
-      - name: Code checkout
-        uses: actions/checkout@v4
-
-      - name: Set up test dependencies
-        run: docker compose up -d
-
-      - name: Running tests
-        run: hatch run test:test
-
-      - name: Tear down test dependencies
-        run: docker compose down -v
+    uses: Matter-Tech/matter-library-actions/.github/workflows/run-tests.yaml@v2
