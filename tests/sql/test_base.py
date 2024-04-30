@@ -1,4 +1,4 @@
-from tests.conftest import PersonORM, Person
+from tests.conftest import Person, PersonORM
 
 
 def test_person_orm_from_pydantic(person_dto):
