@@ -1,15 +1,16 @@
+from typing import Any
 from uuid import UUID
 
-from orjson import loads
 from redis import asyncio as aioredis
 
 from matter_persistence.redis.async_redis_client import AsyncRedisClient
-from matter_persistence.redis.base import CacheRecordModel, Model
+from matter_persistence.redis.base import Model
 from matter_persistence.redis.cache_helper import CacheHelper
 from matter_persistence.redis.exceptions import (
     CacheRecordNotFoundError,
     CacheRecordNotSavedError,
 )
+from matter_persistence.redis.utils import compress_pickle_data, decompress_pickle_data
 
 
 class CacheManager:
@@ -61,10 +62,9 @@ class CacheManager:
         self,
         organization_id: UUID,
         internal_id: int | str | UUID,
-        value: type[Model],
+        value: Any,
         object_class: type[Model] | None = None,
         expiration_in_seconds: int | None = None,
-        **kwargs,  # they are passed to cache_record.model_dump_json()
     ):
         """
         Saves value to the cache with an optional expiration time.
@@ -80,11 +80,11 @@ class CacheManager:
             if expiration_in_seconds:
                 result = await cache_client.set_value(
                     cache_record.hash_key,
-                    cache_record.model_dump_json(**kwargs),
+                    compress_pickle_data(cache_record),
                     ttl=expiration_in_seconds,
                 )
             else:
-                result = await cache_client.set_value(cache_record.hash_key, cache_record.model_dump_json(**kwargs))
+                result = await cache_client.set_value(cache_record.hash_key, compress_pickle_data(cache_record))
 
         if not result:
             raise CacheRecordNotSavedError(
@@ -97,7 +97,6 @@ class CacheManager:
         organization_id: UUID,
         internal_id: int | str | UUID,
         object_class: type[Model] | None = None,
-        **kwargs,  # they are passed to CacheRecordModel.model_validate_json()
     ):
         """
         Gets a value from the cache.
@@ -108,15 +107,15 @@ class CacheManager:
             object_class=object_class,
         )
         async with self.__get_cache_client() as cache_client:
-            cache_record_json = await cache_client.get_value(key)
+            compressed_pickled_cache_record = await cache_client.get_value(key)
 
-        if not cache_record_json:
+        if not compressed_pickled_cache_record:
             raise CacheRecordNotFoundError(
                 description=f"Unable to find Cache Record with the key: {key}",
-                detail=cache_record_json,
+                detail=compressed_pickled_cache_record,
             )
 
-        return CacheRecordModel.model_validate(loads(cache_record_json))
+        return decompress_pickle_data(compressed_pickled_cache_record)
 
     async def delete_value(
         self,
