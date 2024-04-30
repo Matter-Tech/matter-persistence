@@ -43,7 +43,9 @@ dependencies = [
     "pytest-asyncio",
     "mypy",
     "ruff",
-    "pre-commit"
+    "pre-commit",
+    "testcontainers",
+    "asyncpg"
 ]
 path = ".venv"  # having the venv in the same repo makes setting up pre-commit easier
 
@@ -56,21 +58,6 @@ no-cov = "test --no-cov {args}"
 typing = "mypy --install-types --non-interactive {args:matter_persistence}"
 fmt = "ruff format"
 lint = "ruff check --fix"
-
-[tool.hatch.envs.test]
-dependencies = [
-    "asyncpg",
-    "pytest",
-    "pytest-cov",
-    "pytest-asyncio",
-    "testcontainers",
-]
-
-[[tool.hatch.envs.test.matrix]]
-python = ["3.10", "3.11", "3.12"]
-
-[tool.hatch.envs.test.scripts]
-test = "pytest --cov-report=term-missing --cov-config=pyproject.toml -c=pyproject.toml --cov=matter_persistence {args}"
 
 [tool.hatch.metadata]
 allow-direct-references = true
