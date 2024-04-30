@@ -1,4 +1,3 @@
-from typing import Any
 from uuid import UUID
 
 from orjson import loads
@@ -52,7 +51,7 @@ class CacheManager:
         self,
         organization_id: UUID,
         internal_id: int | str | UUID,
-        value: type[Model] | Any,
+        value: type[Model],
         object_class: type[Model] | None = None,
         expiration_in_seconds: int | None = None,
         **kwargs,  # they are passed to cache_record.model_dump_json()
@@ -146,7 +145,7 @@ class CacheManager:
             object_class=object_class,
         )
         async with self.__get_cache_client() as cache_client:
-            return await cache_client.exists(key)
+            return bool(await cache_client.exists(key))  # cache_client.exists() returns 0 or 1
 
     async def is_cache_alive(self):
         """
