@@ -69,23 +69,44 @@ class AsyncRedisClient:
             Checks if the Redis server is alive by sending a ping command.
     """
 
-    connection: aioredis.Redis
+    connection: aioredis.Redis  # type: ignore
 
-    def __init__(self, connection_pool: aioredis.ConnectionPool):
+    def __init__(
+        self, connection: aioredis.Redis | None = None, connection_pool: aioredis.ConnectionPool | None = None
+    ):
+        self.connection = connection  # type: ignore
         self._connection_pool = connection_pool
+        # two ways to initialise this class:
+        #   from a connection object while the connection_pool is None
+        #   from a connection_pool object while the connection is None
+        if self.connection and self._connection_pool is None:
+            self.connection: aioredis.Redis
+        elif self.connection is None and self._connection_pool:
+            self.connection: aioredis.Redis
+        else:
+            raise ValueError(
+                "two possible correct argument combination: "
+                "connection: aioredis.Redis and connection_pool: None OR "
+                "connection: None and connection_pool: aioredis.ConnectionPool"
+            )
 
     async def __aenter__(self):
-        await self.connect()
+        if self._connection_pool:
+            await self.connect()
         return self
 
     async def __aexit__(self, exc_type, exc_value, traceback):
         await self.close()
 
     async def connect(self):
-        self.connection = await aioredis.Redis(connection_pool=self._connection_pool)
+        if self._connection_pool:
+            self.connection = await aioredis.Redis(connection_pool=self._connection_pool)
 
     async def close(self):
-        await self.connection.aclose()
+        if self.connection:
+            await self.connection.aclose()
+        if self._connection_pool:
+            await self._connection_pool.aclose()
 
     @retry_if_failed
     async def set_value(self, key: str, value: str, ttl=None):

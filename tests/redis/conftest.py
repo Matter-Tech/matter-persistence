@@ -3,6 +3,7 @@ from uuid import uuid4
 import pytest
 from pydantic import BaseModel
 from pytest_asyncio import is_async_test
+from testcontainers.redis import AsyncRedisContainer
 
 from matter_persistence.redis.manager import CacheManager
 
@@ -33,5 +34,13 @@ def test_dto():
 
 
 @pytest.fixture(scope="session")
-def cache_manager():
-    return CacheManager(host="localhost", port=6379)
+async def async_redis_client():
+    with AsyncRedisContainer() as redis_container:
+        async_redis_client = await redis_container.get_async_client()
+
+        yield async_redis_client
+
+
+@pytest.fixture(scope="session")
+def cache_manager(async_redis_client):
+    return CacheManager(connection=async_redis_client)

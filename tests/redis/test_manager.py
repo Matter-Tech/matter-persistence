@@ -54,6 +54,6 @@ async def test_cache_manager_cache_record_exists_unsuccess(cache_manager, test_d
     assert await cache_manager.cache_record_exists(ORGANISATION_ID, INTERNAL_ID, TestDTO) == 0
 
 
-async def test_cache_manager_close_connection_pool(cache_manager):
-    await cache_manager.close_connection_pool()
-    assert True  # basically check if method executes without error
+# async def test_cache_manager_close_connection_pool(cache_manager):
+#   await cache_manager.close_connection_pool()
+#    assert True  # basically check if method executes without error

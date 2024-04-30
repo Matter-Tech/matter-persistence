@@ -1,8 +1,9 @@
 from uuid import UUID
 
 from orjson import loads
+from redis import asyncio as aioredis
 
-from matter_persistence.redis.async_redis_client import AsyncRedisClient, get_connection_pool
+from matter_persistence.redis.async_redis_client import AsyncRedisClient
 from matter_persistence.redis.base import CacheRecordModel, Model
 from matter_persistence.redis.cache_helper import CacheHelper
 from matter_persistence.redis.exceptions import (
@@ -28,15 +29,14 @@ class CacheManager:
         Check examples/redis.ipynb for usage examples.
     """
 
-    def __init__(self, host: str, port: int, db: int = 0):
-        self.__connection_pool = get_connection_pool(
-            host=host,
-            port=port,
-            db=db,
-        )
+    def __init__(
+        self, connection: aioredis.Redis | None = None, connection_pool: aioredis.ConnectionPool | None = None
+    ):
+        self.__connection_pool = connection_pool
+        self.__connection = connection
 
     def __get_cache_client(self) -> AsyncRedisClient:
-        return AsyncRedisClient(connection_pool=self.__connection_pool)
+        return AsyncRedisClient(connection=self.__connection, connection_pool=self.__connection_pool)
 
     async def close_connection_pool(self) -> None:
         """
@@ -45,7 +45,10 @@ class CacheManager:
         Since the connection pool is a singleton, this effectively stops the application process from being able
         to connect to Redis, so use only once, when all connections should be closed!
         """
-        await self.__connection_pool.aclose()
+        if self.__connection_pool:
+            await self.__connection_pool.aclose()
+        # from redis: By default, let Redis. auto_close_connection_pool decide whether to close the connection pool.
+        # therefore not calling "await self.__connection.aclose()"
 
     async def save_value(
         self,
