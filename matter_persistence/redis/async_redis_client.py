@@ -69,24 +69,16 @@ class AsyncRedisClient:
             Checks if the Redis server is alive by sending a ping command.
     """
 
-    connection: aioredis.Redis  # type: ignore
-
     def __init__(
         self, connection: aioredis.Redis | None = None, connection_pool: aioredis.ConnectionPool | None = None
     ):
-        self.connection = connection  # type: ignore
-        self._connection_pool = connection_pool
-        # two ways to initialise this class:
-        #   from a connection object while the connection_pool is None
-        #   from a connection_pool object while the connection is None
-        if self.connection and self._connection_pool is None:
-            self.connection: aioredis.Redis
-        elif self.connection is None and self._connection_pool:
-            self.connection: aioredis.Redis
+        if (connection and connection_pool is None) or (connection is None and connection_pool):
+            self.connection = connection
+            self._connection_pool = connection_pool
         else:
             raise ValueError(
-                "two possible correct argument combination: "
-                "connection: aioredis.Redis and connection_pool: None OR "
+                "Invalid argument combination. Please provide either: "
+                "connection: aioredis.Redis and connection_pool: None, OR "
                 "connection: None and connection_pool: aioredis.ConnectionPool"
             )
 
@@ -110,21 +102,21 @@ class AsyncRedisClient:
 
     @retry_if_failed
     async def set_value(self, key: str, value: str, ttl=None):
-        result = await self.connection.set(key, value)
+        result = await self.connection.set(key, value)  # type: ignore
         if ttl is not None:
-            await self.connection.expire(key, ttl)
+            await self.connection.expire(key, ttl)  # type: ignore
 
         return result
 
     @retry_if_failed
     async def get_value(self, key: str):
-        return await self.connection.get(key)
+        return await self.connection.get(key)  # type: ignore
 
     @retry_if_failed
     async def set_hash_field(self, hash_key: str, field: str, value: str, ttl: int | timedelta | None = None):
         result = await self.connection.hset(hash_key, field, value)  # type: ignore
         if ttl is not None:
-            await self.connection.expire(hash_key, ttl)
+            await self.connection.expire(hash_key, ttl)  # type: ignore
 
         return result
 
@@ -138,12 +130,12 @@ class AsyncRedisClient:
 
     @retry_if_failed
     async def delete_key(self, key: str):
-        return await self.connection.delete(key)
+        return await self.connection.delete(key)  # type: ignore
 
     @retry_if_failed
     async def exists(self, key_or_hash: str, field: str | None = None):
         if field is None:
-            return await self.connection.exists(key_or_hash)
+            return await self.connection.exists(key_or_hash)  # type: ignore
         else:
             return await self.connection.hexists(key_or_hash, field)  # type: ignore
 

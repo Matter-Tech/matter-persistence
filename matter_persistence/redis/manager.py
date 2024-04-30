@@ -32,8 +32,15 @@ class CacheManager:
     def __init__(
         self, connection: aioredis.Redis | None = None, connection_pool: aioredis.ConnectionPool | None = None
     ):
-        self.__connection_pool = connection_pool
-        self.__connection = connection
+        if (connection and connection_pool is None) or (connection is None and connection_pool):
+            self.__connection = connection
+            self.__connection_pool = connection_pool
+        else:
+            raise ValueError(
+                "Invalid argument combination. Please provide either: "
+                "connection: aioredis.Redis and connection_pool: None, OR "
+                "connection: None and connection_pool: aioredis.ConnectionPool"
+            )
 
     def __get_cache_client(self) -> AsyncRedisClient:
         return AsyncRedisClient(connection=self.__connection, connection_pool=self.__connection_pool)
