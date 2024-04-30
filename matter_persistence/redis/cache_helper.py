@@ -20,7 +20,6 @@ class CacheHelper:
             internal_id=internal_id,
             object_class=object_class,
         )
-
         return CacheRecordModel(
             internal_id=internal_id,
             hash_key=hash_key,
@@ -28,7 +27,7 @@ class CacheHelper:
             value=value,
             expiration=None
             if not expiration_in_seconds
-            # since we are supporting py3.10, we cannot use "from datetime import UTC"
+            # due to supporting py3.10, "from datetime import UTC" cannot be used
             else (datetime.now(tz=timezone.utc) + timedelta(seconds=expiration_in_seconds)),  # noqa: UP017
         )
 
