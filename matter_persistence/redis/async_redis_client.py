@@ -1,27 +1,8 @@
 from datetime import timedelta
-from functools import lru_cache
 
 from redis import asyncio as aioredis
 
 from matter_persistence.decorators import retry_if_failed
-
-
-@lru_cache(maxsize=1)
-def get_connection_pool(host: str, port: int, db: int = 0) -> aioredis.ConnectionPool:
-    """
-    Gets a connection pool to Redis. Note that it's a singleton - an application process should always only
-    create 1 connection pool & reuse it for all internal connections.
-
-    Args:
-        host (str): Redis host
-        port (int): Redis port
-        db (int): Redis logical database, normally only 0 is used
-
-    Returns:
-        connection_pool (aioredis.ConnectionPool): a connection pool to be reused by connections
-            established in the application
-    """
-    return aioredis.ConnectionPool.from_url(f"redis://{host}:{port}/{db}")
 
 
 class AsyncRedisClient:
