@@ -22,14 +22,13 @@ NUM_ROWS_IN_TABLE = 2
 one_min_difference_in_secs = 60
 
 
-class TestBaseDBModel(CustomBase):
-    __tablename__ = "test_base_db_model"
-    __test__ = False
+class NumberORM(CustomBase):
+    __tablename__ = "numbers"
 
-    test_field: Mapped[int]
+    number: Mapped[int]
 
 
-test_data = [{"test_field": x} for x in range(NUM_ROWS_IN_TABLE)]
+test_data = [{"number": x} for x in range(NUM_ROWS_IN_TABLE)]
 
 
 @pytest.fixture(scope="session")
@@ -51,7 +50,7 @@ async def postgres_db():
         await conn.run_sync(Base.metadata.create_all)
         print("inserting test data")
         for data in test_data:
-            await conn.execute(insert(TestBaseDBModel), data)
+            await conn.execute(insert(NumberORM), data)
         await conn.commit()
 
     yield postgres
