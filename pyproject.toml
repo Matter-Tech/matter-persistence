@@ -59,6 +59,26 @@ typing = "mypy --install-types --non-interactive {args:matter_persistence}"
 fmt = "ruff format"
 lint = "ruff check --fix"
 
+[tool.hatch.envs.test]
+python="3.10"
+
+[tool.hatch.envs.PY311]
+python="3.11"
+
+[tool.hatch.envs.PY312]
+python="3.12"
+
+[tool.hatch.envs.dockerized]
+extra-dependencies = [
+    "matter-persistence",
+    "testcontainers"]
+
+[tool.hatch.envs.dockerized.scripts]
+test = "pytest -c=pyproject.toml {args}"
+
+[[tool.hatch.envs.dockerized.matrix]]
+python = ["3.10", "3.11", "3.12"]
+
 [tool.hatch.metadata]
 allow-direct-references = true
 
