@@ -27,7 +27,7 @@ Do your changes...
 ## Run the tests
 
 ```console
-./run_tests.sh
+hatch run test
 ```
 
 The command above will run the tests against all supported python versions
