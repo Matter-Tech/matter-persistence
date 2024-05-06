@@ -75,7 +75,7 @@ async def find(
     one_or_none: bool = False,
     with_deleted: bool = False,
     filters: dict | None = None,
-    custom_filter: Callable[[sa.Query], sa.Query] | None = None,
+    custom_filter: Callable[[sa.Select], sa.Select] | None = None,
     sort_field: str | None = None,
     sort_method: SortMethodModel | None = None,
     joined_field: str | None = None,
