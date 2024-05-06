@@ -28,7 +28,4 @@ class FoundationModel(abc.ABC, BaseModel):
         elif isinstance(obj, dict):
             return cls(**obj)
         else:
-            try:  # for example python class can be parsed
-                return cls(**obj.__dict__)
-            except Exception as _:  # there is a possibility, that an object cannot be parsed
-                raise TypeError(f"{obj} cannot be parsed")
+            return cls(**obj.__dict__)
