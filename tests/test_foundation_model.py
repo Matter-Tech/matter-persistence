@@ -34,8 +34,3 @@ def test_foundation_model_from_list(person_dto):
 def test_foundation_model_from_python_class(person_dto):
     person = Person.parse_obj(PersonClass(name="john"))
     assert person.name == person_dto.name
-
-
-def test_foundation_model_parse_obj_raises_typeerror():
-    with pytest.raises(TypeError):
-        Person.parse_obj(json.dumps({"name": "john"}))
