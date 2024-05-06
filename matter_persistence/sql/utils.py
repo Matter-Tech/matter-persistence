@@ -1,12 +1,19 @@
 import logging
+from collections.abc import Callable
+from enum import Enum
 
 import sqlalchemy as sa
 from sqlalchemy.orm import joinedload
 
 from matter_persistence.decorators import retry_if_failed
-from matter_persistence.sql.base import CustomBase, SortMethodModel
+from matter_persistence.sql.base import CustomBase
 from matter_persistence.sql.exceptions import DatabaseInvalidSortFieldError, DatabaseNoEngineSetError
 from matter_persistence.sql.manager import AsyncSession, DatabaseManager
+
+
+class SortMethodModel(Enum):
+    ASC = "asc"
+    DESC = "desc"
 
 
 async def is_database_alive(database_manager: DatabaseManager):
@@ -68,6 +75,7 @@ async def find(
     one_or_none: bool = False,
     with_deleted: bool = False,
     filters: dict | None = None,
+    custom_filter: Callable[[sa.Query], sa.Query] | None = None,
     sort_field: str | None = None,
     sort_method: SortMethodModel | None = None,
     joined_field: str | None = None,
@@ -82,7 +90,10 @@ async def find(
 
     for key, value in filters.items():
         if hasattr(db_model, key):
-            q = q.filter(getattr(db_model, key) == value)  # TODO handle other operators too, e.g. gte
+            q = q.filter(getattr(db_model, key) == value)
+
+    if custom_filter:
+        q = custom_filter(q)
 
     if not with_deleted:
         q = q.filter(db_model.deleted.is_(None))

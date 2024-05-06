@@ -1,5 +1,4 @@
 from datetime import datetime, timezone
-from enum import Enum
 from typing import Optional
 from uuid import UUID, uuid4
 
@@ -7,20 +6,6 @@ import sqlalchemy as sa
 from pydantic import BaseModel
 from sqlalchemy import DateTime
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
-
-
-class FilterOperators(Enum):
-    EQUALS = "=="
-    NOT_EQUALS = "!="
-    GT = ">"
-    GTE = ">="
-    ST = "<"
-    STE = "<="
-
-
-class SortMethodModel(Enum):
-    ASC = "asc"
-    DESC = "desc"
 
 
 class Base(DeclarativeBase):
