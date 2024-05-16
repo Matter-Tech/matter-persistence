@@ -46,7 +46,6 @@ hatch run fmt
 hatch run lint
 ```
 
-
 ## Run static type checker
 
 ```console
