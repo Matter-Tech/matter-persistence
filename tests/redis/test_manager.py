@@ -63,3 +63,27 @@ async def test_cache_manager_close_connection_pool(cache_manager):
 async def test_cache_manager_incorrect_argument_combination():
     with pytest.raises(ValueError):
         _ = CacheManager()
+
+
+async def test_cache_manager_save_with_key_and_get_with_key_success(cache_manager, test_dto):
+    await cache_manager.save_with_key("key", test_dto, TestDTO)
+    assert await cache_manager.get_with_key("key", TestDTO)
+
+
+async def test_cache_manager_save_with_key_and_get_with_key_expired(cache_manager, test_dto):
+    await cache_manager.save_with_key("key", test_dto, TestDTO, 1)
+    await asyncio.sleep(1.05)
+    with pytest.raises(CacheRecordNotFoundError):
+        await cache_manager.get_with_key("key", TestDTO)
+
+
+async def test_cache_manager_cache_record_with_key_exists(cache_manager, test_dto):
+    await cache_manager.save_with_key("key", test_dto, TestDTO)
+    assert await cache_manager.cache_record_with_key_exists("key", TestDTO)
+
+
+async def test_cache_manager_delete_with_key(cache_manager):
+    await cache_manager.save_with_key("key", "value")
+    await cache_manager.delete_with_key("key")
+    with pytest.raises(CacheRecordNotFoundError):
+        await cache_manager.get_with_key("key")

@@ -169,7 +169,7 @@ class CacheManager:
         object_name = object_class.__name__ if object_class else None
         hash_key = CacheHelper.create_basic_hash_key(key, object_name)
         if object_class:
-            value = value.json()
+            value = value.model_dump_json()
 
         async with self.__get_cache_client() as cache_client:
             if expiration_in_seconds:
@@ -198,9 +198,9 @@ class CacheManager:
 
         if object_class:
             if isinstance(value, list):
-                value = [object_class.parse_raw(item) for item in value]
+                value = [object_class.model_validate_json(item) for item in value]
             else:
-                value = object_class.parse_raw(value)
+                value = object_class.model_validate_json(value)
 
         return value
 
@@ -218,6 +218,16 @@ class CacheManager:
                     description=f"Unable to retrieve value from cache. Key: {key}",
                     detail={"key": key, "hash_key": hash_key},
                 )
+
+    async def cache_record_with_key_exists(
+        self,
+        key: str,
+        object_class: type[Model] | None = None,
+    ) -> bool:
+        object_name = object_class.__name__ if object_class else None
+        hash_key = CacheHelper.create_basic_hash_key(key, object_name)
+        async with self.__get_cache_client() as cache_client:
+            return bool(await cache_client.exists(hash_key))  # cache_client.exists() returns 0 or 1
 
     async def is_cache_alive(self):
         """
