@@ -24,6 +24,9 @@ class CacheManager:
     - get_value: Retrieves a value from the cache.
     - delete_value: Deletes a value from the cache.
     - cache_record_exists: Checks if a cache record exists.
+    - save_with_key: Saves a value to the cache with an optional expiration time using a key.
+    - get_with_key: Retrieves a value from the cache using a key.
+    - delete_with_key: Deletes a value from the cache using a key.
     - is_cache_alive: Checks if the cache client is alive.
 
     Usage example:
@@ -155,6 +158,76 @@ class CacheManager:
         )
         async with self.__get_cache_client() as cache_client:
             return bool(await cache_client.exists(key))  # cache_client.exists() returns 0 or 1
+
+    async def save_with_key(
+        self,
+        key: str,
+        value: Any,
+        object_class: type[Model] | None = None,
+        expiration_in_seconds: int | None = None,
+    ):
+        object_name = object_class.__name__ if object_class else None
+        hash_key = CacheHelper.create_basic_hash_key(key, object_name)
+        if object_class:
+            value = value.model_dump_json()
+
+        async with self.__get_cache_client() as cache_client:
+            if expiration_in_seconds:
+                result = await cache_client.set_value(hash_key, value, ttl=expiration_in_seconds)
+            else:
+                result = await cache_client.set_value(hash_key, value)
+
+        if not result:
+            raise CacheRecordNotSavedError(
+                description=f"Unable to store value in cache. Key: {key}",
+                detail={"key": key, "hash_key": hash_key},
+            )
+
+        return result
+
+    async def get_with_key(self, key: str, object_class: type[Model] | None = None) -> Any:
+        object_name = object_class.__name__ if object_class else None
+        hash_key = CacheHelper.create_basic_hash_key(key, object_name)
+        async with self.__get_cache_client() as cache_client:
+            value = await cache_client.get_value(hash_key)
+        if not value:
+            raise CacheRecordNotFoundError(
+                description=f"Unable to retrieve value from cache. Key: {key}",
+                detail={"key": key, "hash_key": hash_key},
+            )
+
+        if object_class:
+            if isinstance(value, list):
+                value = [object_class.model_validate_json(item) for item in value]
+            else:
+                value = object_class.model_validate_json(value)
+
+        return value
+
+    async def delete_with_key(
+        self,
+        key: str,
+        object_class: type[Model] | None = None,
+    ) -> Any:
+        object_name = object_class.__name__ if object_class else None
+        hash_key = CacheHelper.create_basic_hash_key(key, object_name)
+
+        async with self.__get_cache_client() as cache_client:
+            if not await cache_client.delete_key(hash_key):
+                raise CacheRecordNotFoundError(
+                    description=f"Unable to retrieve value from cache. Key: {key}",
+                    detail={"key": key, "hash_key": hash_key},
+                )
+
+    async def cache_record_with_key_exists(
+        self,
+        key: str,
+        object_class: type[Model] | None = None,
+    ) -> bool:
+        object_name = object_class.__name__ if object_class else None
+        hash_key = CacheHelper.create_basic_hash_key(key, object_name)
+        async with self.__get_cache_client() as cache_client:
+            return bool(await cache_client.exists(hash_key))  # cache_client.exists() returns 0 or 1
 
     async def is_cache_alive(self):
         """
