@@ -7,7 +7,9 @@ from redis import asyncio as aioredis
 
 
 @lru_cache(maxsize=1)
-def get_connection_pool(host: str, port: int, db: int = 0, username: str = "default", password: str | None = None) -> aioredis.ConnectionPool:
+def get_connection_pool(
+    host: str, port: int, db: int = 0, username: str = "default", password: str | None = None
+) -> aioredis.ConnectionPool:
     """
     Gets a connection pool to Redis. Note that it's a singleton - an application process should always only
     create 1 connection pool & reuse it for all internal connections.
