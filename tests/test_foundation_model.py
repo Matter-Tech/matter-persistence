@@ -1,7 +1,3 @@
-import json
-
-import pytest
-
 from tests.conftest import Person, PersonClass, PersonORM, PersonWithAge
 
 
