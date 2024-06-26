@@ -78,8 +78,6 @@ class AsyncRedisClient:
     async def close(self):
         if self.connection:
             await self.connection.aclose()
-        if self._connection_pool:
-            await self._connection_pool.aclose()
 
     @retry_if_failed
     async def set_value(self, key: str, value: str, ttl=None):
