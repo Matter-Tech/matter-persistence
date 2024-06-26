@@ -1,8 +1,11 @@
+import contextlib
+from collections.abc import AsyncIterator, Mapping, Sequence
 from datetime import timedelta
 
 from redis import asyncio as aioredis
 
 from matter_persistence.decorators import retry_if_failed
+from matter_persistence.redis.exceptions import CacheConnectionNotEstablishedError
 
 
 class AsyncRedisClient:
@@ -54,8 +57,8 @@ class AsyncRedisClient:
         self, connection: aioredis.Redis | None = None, connection_pool: aioredis.ConnectionPool | None = None
     ):
         if (connection and connection_pool is None) or (connection is None and connection_pool):
-            self.connection = connection
-            self._connection_pool = connection_pool
+            self.connection: aioredis.Redis | None = connection
+            self._connection_pool: aioredis.ConnectionPool | None = connection_pool
         else:
             raise ValueError(
                 "Invalid argument combination. Please provide either: "
@@ -79,6 +82,18 @@ class AsyncRedisClient:
         if self.connection:
             await self.connection.aclose()
 
+    @contextlib.asynccontextmanager
+    async def pipeline(
+        self,
+        transaction: bool = True,
+    ) -> AsyncIterator[aioredis.client.Pipeline]:
+        if not isinstance(self.connection, aioredis.Redis):
+            raise CacheConnectionNotEstablishedError(
+                "You cannot use the client if the connection isn't established. Use as async context manager."
+            )
+        async with self.connection.pipeline(transaction=transaction) as pipe:
+            yield pipe
+
     @retry_if_failed
     async def set_value(self, key: str, value: str, ttl=None):
         result = await self.connection.set(key, value)  # type: ignore
@@ -88,8 +103,26 @@ class AsyncRedisClient:
         return result
 
     @retry_if_failed
-    async def get_value(self, key: str):
+    async def set_many_values(self, values: Mapping[str, str], ttl: int | None = None) -> None:
+        async with self.pipeline() as pipe:
+            await pipe.mset(values)
+            if ttl is not None:
+                for key in values.keys():
+                    await pipe.expire(key, ttl)
+            await pipe.execute()
+
+    @retry_if_failed
+    async def get_value(self, key: str) -> str:
         return await self.connection.get(key)  # type: ignore
+
+    @retry_if_failed
+    async def get_many_values(self, keys: Sequence[str]) -> dict[str, str]:
+        if not isinstance(self.connection, aioredis.Redis):
+            raise CacheConnectionNotEstablishedError(
+                "You cannot use the client if the connection isn't established. Use as async context manager."
+            )
+        response = await self.connection.mget(keys)
+        return dict(zip(keys, response, strict=True))
 
     @retry_if_failed
     async def set_hash_field(self, hash_key: str, field: str, value: str, ttl: int | timedelta | None = None):
@@ -117,6 +150,15 @@ class AsyncRedisClient:
             return await self.connection.exists(key_or_hash)  # type: ignore
         else:
             return await self.connection.hexists(key_or_hash, field)  # type: ignore
+
+    @retry_if_failed
+    async def exists_many(self, keys: Sequence[str]) -> bool:
+        if not isinstance(self.connection, aioredis.Redis):
+            raise CacheConnectionNotEstablishedError(
+                "You cannot use the client if the connection isn't established. Use as async context manager."
+            )
+        number_of_existing_keys: int = await self.connection.exists(*keys)
+        return number_of_existing_keys == len(keys)
 
     @retry_if_failed
     async def is_alive(self):

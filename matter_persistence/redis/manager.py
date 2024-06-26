@@ -1,3 +1,4 @@
+from collections.abc import Sequence
 from typing import Any
 from uuid import UUID
 
@@ -185,6 +186,26 @@ class CacheManager:
 
         return result
 
+    async def save_many_with_keys(
+        self,
+        values_to_store: dict[str, Any],
+        object_class: type[Model] | None = None,
+        expiration_in_seconds: int | None = None,
+    ) -> None:
+        object_name = object_class.__name__ if object_class else None
+
+        async with self.__get_cache_client() as cache_client:
+            if object_class is not None:
+                processed_input = {
+                    CacheHelper.create_basic_hash_key(key, object_name): value.model_dump_json()
+                    for key, value in values_to_store.items()
+                }
+            else:
+                processed_input = {
+                    CacheHelper.create_basic_hash_key(key, object_name): value for key, value in values_to_store.items()
+                }
+            await cache_client.set_many_values(processed_input, ttl=expiration_in_seconds)
+
     async def get_with_key(self, key: str, object_class: type[Model] | None = None) -> Any:
         object_name = object_class.__name__ if object_class else None
         hash_key = CacheHelper.create_basic_hash_key(key, object_name)
@@ -203,6 +224,22 @@ class CacheManager:
                 value = object_class.model_validate_json(value)
 
         return value
+
+    async def get_many_with_keys(
+        self, keys: Sequence[str], object_class: type[Model] | None = None
+    ) -> dict[str, str | list[str] | Model | list[Model]]:
+        object_name = object_class.__name__ if object_class else None
+        return_set: dict[str, str | list[str] | Model | list[Model]] = {}
+        async with self.__get_cache_client() as cache_client:
+            processed_input = [CacheHelper.create_basic_hash_key(key, object_name) for key in keys]
+            response: dict[str, str | list[str]] = await cache_client.get_many_values(processed_input)
+            if object_class:
+                for key, value in response.items():
+                    if isinstance(value, list):
+                        return_set[key] = [object_class.model_validate_json(item) for item in value]
+                    else:
+                        return_set[key] = object_class.model_validate_json(value)
+        return return_set
 
     async def delete_with_key(
         self,
