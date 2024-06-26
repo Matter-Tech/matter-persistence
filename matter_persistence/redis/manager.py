@@ -231,14 +231,20 @@ class CacheManager:
         object_name = object_class.__name__ if object_class else None
         return_set: dict[str, str | list[str] | Model | list[Model]] = {}
         async with self.__get_cache_client() as cache_client:
-            processed_input = [CacheHelper.create_basic_hash_key(key, object_name) for key in keys]
-            response: dict[str, str | list[str]] = await cache_client.get_many_values(processed_input)
+            processed_input = {
+                CacheHelper.create_basic_hash_key(original_key, object_name): original_key for original_key in keys
+            }
+            response: dict[str, str | list[str]] = await cache_client.get_many_values(processed_input.keys())
             if object_class:
                 for key, value in response.items():
                     if isinstance(value, list):
-                        return_set[key] = [object_class.model_validate_json(item) for item in value]
+                        return_set[processed_input[key]] = [object_class.model_validate_json(item) for item in value]
+                    elif value is not None:
+                        return_set[processed_input[key]] = object_class.model_validate_json(value)
                     else:
-                        return_set[key] = object_class.model_validate_json(value)
+                        return_set[processed_input[key]] = value
+            else:
+                return_set = {processed_input[key]: value for key, value in response.items()}
         return return_set
 
     async def delete_with_key(

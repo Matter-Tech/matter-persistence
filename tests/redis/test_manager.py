@@ -70,6 +70,32 @@ async def test_cache_manager_save_with_key_and_get_with_key_success(cache_manage
     assert await cache_manager.get_with_key("key", TestDTO)
 
 
+async def test_cache_manager_save_and_get_many_objects_with_keys_success(cache_manager: CacheManager) -> None:
+    test_dtos = {f"key_{i}": TestDTO(test_field=i) for i in range(10)}
+    await cache_manager.save_many_with_keys(test_dtos, TestDTO, 100)
+    response = await cache_manager.get_many_with_keys(test_dtos, TestDTO)
+    assert response == test_dtos
+
+
+async def test_cache_manager_save_and_get_many_raw_values_with_keys_success(cache_manager: CacheManager) -> None:
+    test_input = {f"key_{i}": f"test_value_{i}" for i in range(10)}
+    await cache_manager.save_many_with_keys(test_input, None, 100)
+    response = await cache_manager.get_many_with_keys(test_input, None)
+    for key, value in response.items():
+        assert test_input[key] == value.decode()
+
+
+async def test_cache_manager_get_many_returns_none_for_missing_keys(
+    cache_manager: CacheManager, test_dto: TestDTO
+) -> None:
+    await cache_manager.save_with_key("key", test_dto, TestDTO)
+    response = await cache_manager.get_many_with_keys(("key", "key2", "key3"), TestDTO)
+    assert len(response.keys()) == 3
+    assert response["key"] == test_dto
+    assert response["key2"] is None
+    assert response["key3"] is None
+
+
 async def test_cache_manager_save_with_key_and_get_with_key_expired(cache_manager, test_dto):
     await cache_manager.save_with_key("key", test_dto, TestDTO, 1)
     await asyncio.sleep(1.05)
