@@ -11,3 +11,7 @@ class CacheRecordNotSavedError(DetailedException):
 
 class CacheServerError(DetailedException):
     TOPIC = "Cache Server Error"
+
+
+class CacheConnectionNotEstablishedError(DetailedException):
+    TOPIC = "Cache Connection Not Established"
