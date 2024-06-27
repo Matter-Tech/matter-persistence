@@ -1,4 +1,5 @@
 import contextlib
+import itertools
 from collections.abc import AsyncIterator, Mapping, Sequence
 from datetime import timedelta
 
@@ -14,6 +15,8 @@ class AsyncRedisClient:
 
     Arguments:
         connection_pool (ConnectionPool): The Redis connection pool to use for establishing a connection with.
+        connection (Redis): The Redis connection to use; connections will not be pooled - only this one will be used.
+        sentinel (Sentinel): The Redis Sentinel to use. Provides option of using the client either for reading or writing.
 
     Methods:
         async def __aenter__(self) -> AsyncRedisClient:
@@ -54,31 +57,40 @@ class AsyncRedisClient:
     """
 
     def __init__(
-        self, connection: aioredis.Redis | None = None, connection_pool: aioredis.ConnectionPool | None = None
+        self,
+        connection: aioredis.Redis | None = None,
+        connection_pool: aioredis.ConnectionPool | None = None,
+        sentinel: aioredis.Sentinel | None = None,
+        sentinel_service_name: str | None = None,
+        for_writing: bool = False,
     ):
-        if (connection and connection_pool is None) or (connection is None and connection_pool):
-            self.connection: aioredis.Redis | None = connection
-            self._connection_pool: aioredis.ConnectionPool | None = connection_pool
-        else:
+        if any(
+            all(item is not None for item in combination)
+            for combination in itertools.combinations((connection, connection_pool, sentinel), 2)
+        ):
             raise ValueError(
-                "Invalid argument combination. Please provide either: "
-                "connection: aioredis.Redis and connection_pool: None, OR "
-                "connection: None and connection_pool: aioredis.ConnectionPool"
+                "Invalid argument combination. Please provide only 1 of: "
+                "connection: redis.asyncio.Redis - direct connection to a Redis instance without pooling; OR"
+                "connection_pool: redis.asyncio.ConnectionPool - for pooling connections to a Redis instance; OR"
+                "sentinel: redis.asyncio.Sentinel - for managing connections to a set of self-healing Redis nodes."
             )
+        self.connection = connection
+        self._connection_pool = connection_pool
+        self._sentinel = sentinel
+        self._sentinel_service_name = sentinel_service_name
+        self._for_writing = for_writing
 
     async def __aenter__(self):
         if self._connection_pool:
-            await self.connect()
+            self.connection = await aioredis.Redis(connection_pool=self._connection_pool)
+        elif self._sentinel:
+            if self._for_writing:
+                self.connection = await self._sentinel.master_for(service_name=self._sentinel_service_name)
+            else:
+                self.connection = await self._sentinel.slave_for(service_name=self._sentinel_service_name)
         return self
 
     async def __aexit__(self, exc_type, exc_value, traceback):
-        await self.close()
-
-    async def connect(self):
-        if self._connection_pool:
-            self.connection = await aioredis.Redis(connection_pool=self._connection_pool)
-
-    async def close(self):
         if self.connection:
             await self.connection.aclose()
 

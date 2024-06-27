@@ -1,3 +1,4 @@
+import itertools
 from collections.abc import Sequence
 from typing import Any
 from uuid import UUID
@@ -35,20 +36,35 @@ class CacheManager:
     """
 
     def __init__(
-        self, connection: aioredis.Redis | None = None, connection_pool: aioredis.ConnectionPool | None = None
+        self,
+        connection: aioredis.Redis | None = None,
+        connection_pool: aioredis.ConnectionPool | None = None,
+        sentinel: aioredis.Sentinel | None = None,
+        sentinel_service_name: str | None = None,
     ):
-        if (connection and connection_pool is None) or (connection is None and connection_pool):
-            self.__connection = connection
-            self.__connection_pool = connection_pool
-        else:
+        if any(
+            all(item is not None for item in combination)
+            for combination in itertools.combinations((connection, connection_pool, sentinel), 2)
+        ):
             raise ValueError(
-                "Invalid argument combination. Please provide either: "
-                "connection: aioredis.Redis and connection_pool: None, OR "
-                "connection: None and connection_pool: aioredis.ConnectionPool"
+                "Invalid argument combination. Please provide only 1 of: "
+                "connection: redis.asyncio.Redis - direct connection to a Redis instance without pooling; OR"
+                "connection_pool: redis.asyncio.ConnectionPool - for pooling connections to a Redis instance; OR"
+                "sentinel: redis.asyncio.Sentinel - for managing connections to a set of self-healing Redis nodes."
             )
+        self.__connection = connection
+        self.__connection_pool = connection_pool
+        self.__sentinel = sentinel
+        self.__sentinel_service_name = sentinel_service_name
 
-    def __get_cache_client(self) -> AsyncRedisClient:
-        return AsyncRedisClient(connection=self.__connection, connection_pool=self.__connection_pool)
+    def __get_cache_client(self, for_writing: bool = False) -> AsyncRedisClient:
+        return AsyncRedisClient(
+            connection=self.__connection,
+            connection_pool=self.__connection_pool,
+            sentinel=self.__sentinel,
+            sentinel_service_name=self.__sentinel_service_name,
+            for_writing=for_writing,
+        )
 
     async def close_connection_pool(self) -> None:
         """
@@ -59,8 +75,11 @@ class CacheManager:
         """
         if self.__connection_pool:
             await self.__connection_pool.aclose()
-        # from redis: By default, let Redis. auto_close_connection_pool decide whether to close the connection pool.
-        # therefore not calling "await self.__connection.aclose()"
+            # from redis: By default, let Redis. auto_close_connection_pool decide whether to close the connection pool.
+            # therefore not calling "await self.__connection.aclose()"
+        if self.__sentinel:
+            for sentinel_connection in self.__sentinel.sentinels:
+                await sentinel_connection.aclose()
 
     async def save_value(
         self,
@@ -80,7 +99,7 @@ class CacheManager:
             object_class=object_class,
             expiration_in_seconds=expiration_in_seconds,
         )
-        async with self.__get_cache_client() as cache_client:
+        async with self.__get_cache_client(for_writing=True) as cache_client:
             if expiration_in_seconds:
                 result = await cache_client.set_value(
                     cache_record.hash_key,
@@ -110,7 +129,7 @@ class CacheManager:
             internal_id=str(internal_id),
             object_class=object_class,
         )
-        async with self.__get_cache_client() as cache_client:
+        async with self.__get_cache_client(for_writing=False) as cache_client:
             compressed_pickled_cache_record = await cache_client.get_value(key)
 
         if not compressed_pickled_cache_record:
@@ -136,7 +155,7 @@ class CacheManager:
             object_class=object_class,
         )
 
-        async with self.__get_cache_client() as cache_client:
+        async with self.__get_cache_client(for_writing=True) as cache_client:
             if not await cache_client.delete_key(key):
                 raise CacheRecordNotFoundError(
                     description=f"Unable to retrieve value from cache. Key: {key}",
@@ -157,7 +176,7 @@ class CacheManager:
             internal_id=str(internal_id),
             object_class=object_class,
         )
-        async with self.__get_cache_client() as cache_client:
+        async with self.__get_cache_client(for_writing=False) as cache_client:
             return bool(await cache_client.exists(key))  # cache_client.exists() returns 0 or 1
 
     async def save_with_key(
@@ -172,7 +191,7 @@ class CacheManager:
         if object_class:
             value = value.model_dump_json()
 
-        async with self.__get_cache_client() as cache_client:
+        async with self.__get_cache_client(for_writing=True) as cache_client:
             if expiration_in_seconds:
                 result = await cache_client.set_value(hash_key, value, ttl=expiration_in_seconds)
             else:
@@ -194,7 +213,7 @@ class CacheManager:
     ) -> None:
         object_name = object_class.__name__ if object_class else None
 
-        async with self.__get_cache_client() as cache_client:
+        async with self.__get_cache_client(for_writing=True) as cache_client:
             if object_class is not None:
                 processed_input = {
                     CacheHelper.create_basic_hash_key(key, object_name): value.model_dump_json()
@@ -209,7 +228,7 @@ class CacheManager:
     async def get_with_key(self, key: str, object_class: type[Model] | None = None) -> Any:
         object_name = object_class.__name__ if object_class else None
         hash_key = CacheHelper.create_basic_hash_key(key, object_name)
-        async with self.__get_cache_client() as cache_client:
+        async with self.__get_cache_client(for_writing=False) as cache_client:
             value = await cache_client.get_value(hash_key)
         if not value:
             raise CacheRecordNotFoundError(
@@ -230,7 +249,7 @@ class CacheManager:
     ) -> dict[str, str | list[str] | Model | list[Model]]:
         object_name = object_class.__name__ if object_class else None
         return_set: dict[str, str | list[str] | Model | list[Model]] = {}
-        async with self.__get_cache_client() as cache_client:
+        async with self.__get_cache_client(for_writing=False) as cache_client:
             processed_input = {
                 CacheHelper.create_basic_hash_key(original_key, object_name): original_key for original_key in keys
             }
@@ -255,7 +274,7 @@ class CacheManager:
         object_name = object_class.__name__ if object_class else None
         hash_key = CacheHelper.create_basic_hash_key(key, object_name)
 
-        async with self.__get_cache_client() as cache_client:
+        async with self.__get_cache_client(for_writing=True) as cache_client:
             if not await cache_client.delete_key(hash_key):
                 raise CacheRecordNotFoundError(
                     description=f"Unable to retrieve value from cache. Key: {key}",
@@ -269,12 +288,12 @@ class CacheManager:
     ) -> bool:
         object_name = object_class.__name__ if object_class else None
         hash_key = CacheHelper.create_basic_hash_key(key, object_name)
-        async with self.__get_cache_client() as cache_client:
+        async with self.__get_cache_client(for_writing=False) as cache_client:
             return bool(await cache_client.exists(hash_key))  # cache_client.exists() returns 0 or 1
 
     async def is_cache_alive(self):
         """
         Checks if the cache client is alive.
         """
-        async with self.__get_cache_client() as cache_client:
+        async with self.__get_cache_client(for_writing=False) as cache_client:
             return await cache_client.is_alive()

@@ -31,6 +31,31 @@ def get_connection_pool(
     return aioredis.ConnectionPool.from_url(redis_url)
 
 
+async def get_sentinel(
+    sentinel_addresses: list[tuple[str, int]], password: str | None = None, **kwargs: Any
+) -> aioredis.Sentinel:
+    """
+    Gets a Sentinel instance for connecting to a set of Redis nodes connected using the sentinel protocol.
+
+    Read more about the Redis Sentinel protocol here: https://redis.io/docs/latest/operate/oss_and_stack/management/sentinel/
+
+    Args:
+        sentinel_addresses (list[tuple[str, int]]): list of addresses pointing to sentinel endpoints in the Redis nodes;
+            or an address of a Kubernetes service exposing sentinel capabilities
+        password (str): Redis password, optional; will also be used for sentinels
+        kwargs (Any): keyword arguments passed to redis.asyncio.sentinel.Sentinel & then to underlying
+            redis.asyncio.Redis connections
+
+    Returns:
+        sentinel (redis.asyncio.sentinel.Sentinel): a Sentinel instance
+    """
+    if password is not None:
+        kwargs["password"] = password
+        kwargs["sentinel_kwargs"] = kwargs.get("sentinel_kwargs", dict()).update(password=password)
+    sentinel = aioredis.Sentinel(sentinel_addresses, **kwargs)
+    return sentinel
+
+
 def compress_pickle_data(data: Any) -> bytes:
     pickled_data = pickle.dumps(data)  # Serialize the data into bytes using pickle
     compressed_data = gzip.compress(pickled_data)  # Compress the pickled data using gzip
