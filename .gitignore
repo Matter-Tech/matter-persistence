@@ -131,3 +131,6 @@ dmypy.json
 matter-persistence\[postgress\]/
 .DS_Store
 .idea
+
+# direnv
+.envrc
