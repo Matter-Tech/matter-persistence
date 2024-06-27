@@ -1,4 +1,5 @@
 import gzip
+import itertools
 import pickle
 from functools import lru_cache
 from typing import Any
@@ -66,3 +67,15 @@ def decompress_pickle_data(compressed_data: bytes) -> Any:
     decompressed_data = gzip.decompress(compressed_data)  # Decompress the compressed data using gzip
     data = pickle.loads(decompressed_data)  # Deserialize the data back into Python objects using pickle
     return data
+
+
+def validate_connection_arguments(*args: Any | None) -> None:
+    if any(all(item is not None for item in combination) for combination in itertools.combinations(args, 2)) or all(
+        item is None for item in args
+    ):
+        raise ValueError(
+            "Invalid argument combination. Please provide only 1 of: "
+            "connection: redis.asyncio.Redis - direct connection to a Redis instance without pooling; OR"
+            "connection_pool: redis.asyncio.ConnectionPool - for pooling connections to a Redis instance; OR"
+            "sentinel: redis.asyncio.Sentinel - for managing connections to a set of self-healing Redis nodes."
+        )

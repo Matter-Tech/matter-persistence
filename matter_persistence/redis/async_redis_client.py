@@ -1,5 +1,4 @@
 import contextlib
-import itertools
 from collections.abc import AsyncIterator, Mapping, Sequence
 from datetime import timedelta
 
@@ -7,6 +6,7 @@ from redis import asyncio as aioredis
 
 from matter_persistence.decorators import retry_if_failed
 from matter_persistence.redis.exceptions import CacheConnectionNotEstablishedError
+from matter_persistence.redis.utils import validate_connection_arguments
 
 
 class AsyncRedisClient:
@@ -64,16 +64,7 @@ class AsyncRedisClient:
         sentinel_service_name: str | None = None,
         for_writing: bool = False,
     ):
-        if any(
-            all(item is not None for item in combination)
-            for combination in itertools.combinations((connection, connection_pool, sentinel), 2)
-        ):
-            raise ValueError(
-                "Invalid argument combination. Please provide only 1 of: "
-                "connection: redis.asyncio.Redis - direct connection to a Redis instance without pooling; OR"
-                "connection_pool: redis.asyncio.ConnectionPool - for pooling connections to a Redis instance; OR"
-                "sentinel: redis.asyncio.Sentinel - for managing connections to a set of self-healing Redis nodes."
-            )
+        validate_connection_arguments(connection, connection_pool, sentinel)
         self.connection = connection
         self._connection_pool = connection_pool
         self._sentinel = sentinel

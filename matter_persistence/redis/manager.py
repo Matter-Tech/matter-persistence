@@ -1,4 +1,3 @@
-import itertools
 from collections.abc import Sequence
 from typing import Any
 from uuid import UUID
@@ -12,7 +11,7 @@ from matter_persistence.redis.exceptions import (
     CacheRecordNotFoundError,
     CacheRecordNotSavedError,
 )
-from matter_persistence.redis.utils import compress_pickle_data, decompress_pickle_data
+from matter_persistence.redis.utils import compress_pickle_data, decompress_pickle_data, validate_connection_arguments
 
 
 class CacheManager:
@@ -42,16 +41,7 @@ class CacheManager:
         sentinel: aioredis.Sentinel | None = None,
         sentinel_service_name: str | None = None,
     ):
-        if any(
-            all(item is not None for item in combination)
-            for combination in itertools.combinations((connection, connection_pool, sentinel), 2)
-        ):
-            raise ValueError(
-                "Invalid argument combination. Please provide only 1 of: "
-                "connection: redis.asyncio.Redis - direct connection to a Redis instance without pooling; OR"
-                "connection_pool: redis.asyncio.ConnectionPool - for pooling connections to a Redis instance; OR"
-                "sentinel: redis.asyncio.Sentinel - for managing connections to a set of self-healing Redis nodes."
-            )
+        validate_connection_arguments(connection, connection_pool, sentinel)
         self.__connection = connection
         self.__connection_pool = connection_pool
         self.__sentinel = sentinel
