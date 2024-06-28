@@ -115,7 +115,7 @@ class AsyncRedisClient:
             await pipe.execute()
 
     @retry_if_failed
-    async def get_value(self, key: str) -> str:
+    async def get_value(self, key: str) -> bytes:
         return await self.connection.get(key)  # type: ignore
 
     @retry_if_failed
@@ -136,11 +136,11 @@ class AsyncRedisClient:
         return result
 
     @retry_if_failed
-    async def get_hash_field(self, hash_key: str, field: str):
+    async def get_hash_field(self, hash_key: str, field: str) -> bytes:
         return await self.connection.hget(hash_key, field)  # type: ignore
 
     @retry_if_failed
-    async def get_all_hash_fields(self, hash_key: str):
+    async def get_all_hash_fields(self, hash_key: str) -> list[bytes]:
         return await self.connection.hgetall(hash_key)  # type: ignore
 
     @retry_if_failed
@@ -148,7 +148,7 @@ class AsyncRedisClient:
         return await self.connection.delete(key)  # type: ignore
 
     @retry_if_failed
-    async def exists(self, key_or_hash: str, field: str | None = None):
+    async def exists(self, key_or_hash: str, field: str | None = None) -> int:
         if field is None:
             return await self.connection.exists(key_or_hash)  # type: ignore
         else:
