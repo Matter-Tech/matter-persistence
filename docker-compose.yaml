@@ -1,10 +1,4 @@
 services:
-  redis:
-    image: redis:latest
-    ports:
-      - "6379:6379"
-    restart: on-failure
-
   postgres:
     image: postgres:latest
     environment:
@@ -14,3 +8,40 @@ services:
     ports:
       - "5432:5432"
     restart: on-failure
+
+  redis-primary:
+    image: bitnami/redis:latest
+    ports:
+      - "6379:6379"
+    environment:
+      REDIS_PASSWORD: VerySecretPassword!
+    healthcheck:
+      test: [ "CMD", "redis-cli", "--raw", "incr", "ping" ]
+      start_period: 2s
+
+    restart: on-failure
+
+  redis-secondary:
+    image: bitnami/redis:latest
+    ports:
+      - 6379
+    environment:
+      REDIS_PASSWORD: VerySecretPassword!
+    command: redis-server --slaveof redis-primary 6379
+    depends_on:
+      redis-primary:
+        condition: service_healthy
+
+  redis-sentinel:
+    image: bitnami/redis-sentinel:latest
+    environment:
+      REDIS_MASTER_HOST: redis-primary
+      REDIS_SENTINEL_PASSWORD: VerySecretPassword!
+    ports:
+      - 26379
+    depends_on:
+      redis-primary:
+        condition: service_healthy
+    deploy:
+      mode: replicated
+      replicas: 3

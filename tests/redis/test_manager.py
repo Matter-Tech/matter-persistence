@@ -113,3 +113,8 @@ async def test_cache_manager_delete_with_key(cache_manager):
     await cache_manager.delete_with_key("key")
     with pytest.raises(CacheRecordNotFoundError):
         await cache_manager.get_with_key("key")
+
+
+async def test_cache_manager_set_many_with_sentinel(cache_manager_with_sentinel: CacheManager) -> None:
+    await cache_manager_with_sentinel.save_with_key("test", "some_value")
+    assert (await cache_manager_with_sentinel.get_with_key("test")).decode() == "some_value"

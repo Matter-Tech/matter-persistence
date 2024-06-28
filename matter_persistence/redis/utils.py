@@ -52,7 +52,7 @@ async def get_sentinel(
     """
     if password is not None:
         kwargs["password"] = password
-        kwargs["sentinel_kwargs"] = kwargs.get("sentinel_kwargs", dict()).update(password=password)
+        kwargs["sentinel_kwargs"] = {**kwargs.get("sentinel_kwargs", dict()), **dict(password=password)}
     sentinel = aioredis.Sentinel(sentinel_addresses, **kwargs)
     return sentinel
 
