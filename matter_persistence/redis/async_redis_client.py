@@ -6,6 +6,7 @@ from redis import asyncio as aioredis
 
 from matter_persistence.decorators import retry_if_failed
 from matter_persistence.redis.exceptions import CacheConnectionNotEstablishedError
+from matter_persistence.redis.utils import validate_connection_arguments
 
 
 class AsyncRedisClient:
@@ -14,6 +15,8 @@ class AsyncRedisClient:
 
     Arguments:
         connection_pool (ConnectionPool): The Redis connection pool to use for establishing a connection with.
+        connection (Redis): The Redis connection to use; connections will not be pooled - only this one will be used.
+        sentinel (Sentinel): The Redis Sentinel to use. Provides option of using the client either for reading or writing.
 
     Methods:
         async def __aenter__(self) -> AsyncRedisClient:
@@ -54,31 +57,31 @@ class AsyncRedisClient:
     """
 
     def __init__(
-        self, connection: aioredis.Redis | None = None, connection_pool: aioredis.ConnectionPool | None = None
+        self,
+        connection: aioredis.Redis | None = None,
+        connection_pool: aioredis.ConnectionPool | None = None,
+        sentinel: aioredis.Sentinel | None = None,
+        sentinel_service_name: str | None = None,
+        for_writing: bool = False,
     ):
-        if (connection and connection_pool is None) or (connection is None and connection_pool):
-            self.connection: aioredis.Redis | None = connection
-            self._connection_pool: aioredis.ConnectionPool | None = connection_pool
-        else:
-            raise ValueError(
-                "Invalid argument combination. Please provide either: "
-                "connection: aioredis.Redis and connection_pool: None, OR "
-                "connection: None and connection_pool: aioredis.ConnectionPool"
-            )
+        validate_connection_arguments(connection, connection_pool, sentinel)
+        self.connection = connection
+        self._connection_pool = connection_pool
+        self._sentinel = sentinel
+        self._sentinel_service_name = sentinel_service_name
+        self._for_writing = for_writing
 
     async def __aenter__(self):
         if self._connection_pool:
-            await self.connect()
+            self.connection = await aioredis.Redis(connection_pool=self._connection_pool)
+        elif self._sentinel:
+            if self._for_writing:
+                self.connection = await self._sentinel.master_for(service_name=self._sentinel_service_name)
+            else:
+                self.connection = await self._sentinel.slave_for(service_name=self._sentinel_service_name)
         return self
 
     async def __aexit__(self, exc_type, exc_value, traceback):
-        await self.close()
-
-    async def connect(self):
-        if self._connection_pool:
-            self.connection = await aioredis.Redis(connection_pool=self._connection_pool)
-
-    async def close(self):
         if self.connection:
             await self.connection.aclose()
 
@@ -112,11 +115,11 @@ class AsyncRedisClient:
             await pipe.execute()
 
     @retry_if_failed
-    async def get_value(self, key: str) -> str:
+    async def get_value(self, key: str) -> bytes:
         return await self.connection.get(key)  # type: ignore
 
     @retry_if_failed
-    async def get_many_values(self, keys: Sequence[str]) -> dict[str, str]:
+    async def get_many_values(self, keys: Sequence[str]) -> dict[str, bytes]:
         if not isinstance(self.connection, aioredis.Redis):
             raise CacheConnectionNotEstablishedError(
                 "You cannot use the client if the connection isn't established. Use as async context manager."
@@ -133,11 +136,11 @@ class AsyncRedisClient:
         return result
 
     @retry_if_failed
-    async def get_hash_field(self, hash_key: str, field: str):
+    async def get_hash_field(self, hash_key: str, field: str) -> bytes:
         return await self.connection.hget(hash_key, field)  # type: ignore
 
     @retry_if_failed
-    async def get_all_hash_fields(self, hash_key: str):
+    async def get_all_hash_fields(self, hash_key: str) -> list[bytes]:
         return await self.connection.hgetall(hash_key)  # type: ignore
 
     @retry_if_failed
@@ -145,7 +148,7 @@ class AsyncRedisClient:
         return await self.connection.delete(key)  # type: ignore
 
     @retry_if_failed
-    async def exists(self, key_or_hash: str, field: str | None = None):
+    async def exists(self, key_or_hash: str, field: str | None = None) -> int:
         if field is None:
             return await self.connection.exists(key_or_hash)  # type: ignore
         else:

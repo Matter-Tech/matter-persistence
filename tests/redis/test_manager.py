@@ -1,6 +1,7 @@
 import asyncio
 
 import pytest
+from pydantic import BaseModel
 
 from matter_persistence.redis.exceptions import CacheRecordNotFoundError
 from matter_persistence.redis.manager import CacheManager
@@ -73,15 +74,18 @@ async def test_cache_manager_save_with_key_and_get_with_key_success(cache_manage
 async def test_cache_manager_save_and_get_many_objects_with_keys_success(cache_manager: CacheManager) -> None:
     test_dtos = {f"key_{i}": TestDTO(test_field=i) for i in range(10)}
     await cache_manager.save_many_with_keys(test_dtos, TestDTO, 100)
-    response = await cache_manager.get_many_with_keys(test_dtos, TestDTO)
+    response = await cache_manager.get_many_with_keys(list(test_dtos.keys()), TestDTO)
     assert response == test_dtos
 
 
 async def test_cache_manager_save_and_get_many_raw_values_with_keys_success(cache_manager: CacheManager) -> None:
     test_input = {f"key_{i}": f"test_value_{i}" for i in range(10)}
     await cache_manager.save_many_with_keys(test_input, None, 100)
-    response = await cache_manager.get_many_with_keys(test_input, None)
+    response: dict[str, bytes | list[bytes] | BaseModel | list[BaseModel]] = await cache_manager.get_many_with_keys(
+        list(test_input.keys()), None
+    )
     for key, value in response.items():
+        assert isinstance(value, bytes)
         assert test_input[key] == value.decode()
 
 
@@ -113,3 +117,8 @@ async def test_cache_manager_delete_with_key(cache_manager):
     await cache_manager.delete_with_key("key")
     with pytest.raises(CacheRecordNotFoundError):
         await cache_manager.get_with_key("key")
+
+
+async def test_cache_manager_set_many_with_sentinel(cache_manager_with_sentinel: CacheManager) -> None:
+    await cache_manager_with_sentinel.save_with_key("test", "some_value")
+    assert (await cache_manager_with_sentinel.get_with_key("test")).decode() == "some_value"
