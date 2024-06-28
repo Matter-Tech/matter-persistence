@@ -1,4 +1,4 @@
-from typing import AsyncGenerator
+from collections.abc import AsyncGenerator
 from unittest.mock import patch
 from uuid import uuid4
 
@@ -6,7 +6,6 @@ import pytest
 import redis.asyncio
 from pydantic import BaseModel
 from pytest_asyncio import is_async_test
-from pytest_mock import MockFixture
 from testcontainers.compose import DockerCompose
 from testcontainers.redis import AsyncRedisContainer
 

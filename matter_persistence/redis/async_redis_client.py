@@ -119,7 +119,7 @@ class AsyncRedisClient:
         return await self.connection.get(key)  # type: ignore
 
     @retry_if_failed
-    async def get_many_values(self, keys: Sequence[str]) -> dict[str, str]:
+    async def get_many_values(self, keys: Sequence[str]) -> dict[str, bytes]:
         if not isinstance(self.connection, aioredis.Redis):
             raise CacheConnectionNotEstablishedError(
                 "You cannot use the client if the connection isn't established. Use as async context manager."

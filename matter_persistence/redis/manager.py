@@ -236,14 +236,14 @@ class CacheManager:
 
     async def get_many_with_keys(
         self, keys: Sequence[str], object_class: type[Model] | None = None
-    ) -> dict[str, str | list[str] | Model | list[Model]]:
+    ) -> dict[str, bytes | list[bytes] | Model | list[Model]]:
         object_name = object_class.__name__ if object_class else None
-        return_set: dict[str, str | list[str] | Model | list[Model]] = {}
+        return_set: dict[str, bytes | list[bytes] | Model | list[Model]] = {}
         async with self.__get_cache_client(for_writing=False) as cache_client:
             processed_input = {
                 CacheHelper.create_basic_hash_key(original_key, object_name): original_key for original_key in keys
             }
-            response: dict[str, str | list[str]] = await cache_client.get_many_values(processed_input.keys())
+            response: dict[str, bytes | list[bytes]] = await cache_client.get_many_values(processed_input.keys())
             if object_class:
                 for key, value in response.items():
                     if isinstance(value, list):

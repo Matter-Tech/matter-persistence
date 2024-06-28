@@ -54,9 +54,9 @@ examples = ["notebook"]
 [tool.hatch.envs.default.scripts]
 test = "pytest --cov-report=term-missing --cov-config=pyproject.toml -c=pyproject.toml --cov=matter_persistence {args}"
 no-cov = "test --no-cov {args}"
-typing = "mypy --install-types --non-interactive {args:matter_persistence}"
-fmt = "ruff format"
-lint = "ruff check --fix"
+typing = "mypy --install-types --non-interactive {args:matter_persistence tests}"
+fmt = "ruff format {args:matter_persistence tests}"
+lint = "ruff check --fix {args:matter_persistence tests}"
 
 [tool.hatch.envs.test]
 python="3.10"
