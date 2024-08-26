@@ -175,9 +175,9 @@ class CacheManager:
         value: Any,
         object_class: type[Model] | None = None,
         expiration_in_seconds: int | None = None,
+        use_key_as_is: bool = False,
     ):
-        object_name = object_class.__name__ if object_class else None
-        hash_key = CacheHelper.create_basic_hash_key(key, object_name)
+        hash_key = self._get_key_from_params(key=key, object_class=object_class, use_key_as_is=use_key_as_is)
         if object_class:
             value = value.model_dump_json()
 
@@ -215,9 +215,8 @@ class CacheManager:
                 }
             await cache_client.set_many_values(processed_input, ttl=expiration_in_seconds)
 
-    async def get_with_key(self, key: str, object_class: type[Model] | None = None) -> Any:
-        object_name = object_class.__name__ if object_class else None
-        hash_key = CacheHelper.create_basic_hash_key(key, object_name)
+    async def get_with_key(self, key: str, object_class: type[Model] | None = None, use_key_as_is: bool = False) -> Any:
+        hash_key = self._get_key_from_params(key=key, object_class=object_class, use_key_as_is=use_key_as_is)
         async with self.__get_cache_client(for_writing=False) as cache_client:
             value = await cache_client.get_value(hash_key)
         if not value:
@@ -260,10 +259,9 @@ class CacheManager:
         self,
         key: str,
         object_class: type[Model] | None = None,
+        use_key_as_is: bool = False,
     ) -> Any:
-        object_name = object_class.__name__ if object_class else None
-        hash_key = CacheHelper.create_basic_hash_key(key, object_name)
-
+        hash_key = self._get_key_from_params(key=key, object_class=object_class, use_key_as_is=use_key_as_is)
         async with self.__get_cache_client(for_writing=True) as cache_client:
             if not await cache_client.delete_key(hash_key):
                 raise CacheRecordNotFoundError(
@@ -275,9 +273,9 @@ class CacheManager:
         self,
         key: str,
         object_class: type[Model] | None = None,
+        use_key_as_is: bool = False,
     ) -> bool:
-        object_name = object_class.__name__ if object_class else None
-        hash_key = CacheHelper.create_basic_hash_key(key, object_name)
+        hash_key = self._get_key_from_params(key=key, object_class=object_class, use_key_as_is=use_key_as_is)
         async with self.__get_cache_client(for_writing=False) as cache_client:
             return bool(await cache_client.exists(hash_key))  # cache_client.exists() returns 0 or 1
 
@@ -287,3 +285,11 @@ class CacheManager:
         """
         async with self.__get_cache_client(for_writing=False) as cache_client:
             return await cache_client.is_alive()
+
+    @staticmethod
+    def _get_key_from_params(key: str, object_class: type[Model] | None = None, use_key_as_is: bool = False) -> str:
+        if use_key_as_is:
+            return key
+        else:
+            object_name = object_class.__name__ if object_class else None
+            return CacheHelper.create_basic_hash_key(key, object_name)
