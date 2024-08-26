@@ -2,6 +2,7 @@ import asyncio
 
 import pytest
 from pydantic import BaseModel
+from redis.asyncio import Redis
 
 from matter_persistence.redis.exceptions import CacheRecordNotFoundError
 from matter_persistence.redis.manager import CacheManager
@@ -66,9 +67,10 @@ async def test_cache_manager_incorrect_argument_combination():
         _ = CacheManager()
 
 
-async def test_cache_manager_save_with_key_and_get_with_key_success(cache_manager, test_dto):
-    await cache_manager.save_with_key("key", test_dto, TestDTO)
-    assert await cache_manager.get_with_key("key", TestDTO)
+@pytest.mark.parametrize("use_key_as_is", (True, False))
+async def test_cache_manager_save_with_key_and_get_with_key_success(cache_manager, test_dto, use_key_as_is: bool):
+    await cache_manager.save_with_key("key", test_dto, TestDTO, use_key_as_is=use_key_as_is)
+    assert await cache_manager.get_with_key("key", TestDTO, use_key_as_is=use_key_as_is)
 
 
 async def test_cache_manager_save_and_get_many_objects_with_keys_success(cache_manager: CacheManager) -> None:
@@ -107,18 +109,29 @@ async def test_cache_manager_save_with_key_and_get_with_key_expired(cache_manage
         await cache_manager.get_with_key("key", TestDTO)
 
 
-async def test_cache_manager_cache_record_with_key_exists(cache_manager, test_dto):
-    await cache_manager.save_with_key("key", test_dto, TestDTO)
-    assert await cache_manager.cache_record_with_key_exists("key", TestDTO)
+@pytest.mark.parametrize("use_key_as_is", (True, False))
+async def test_cache_manager_cache_record_with_key_exists(cache_manager, test_dto, use_key_as_is: bool):
+    await cache_manager.save_with_key("key", test_dto, TestDTO, use_key_as_is=use_key_as_is)
+    assert await cache_manager.cache_record_with_key_exists("key", TestDTO, use_key_as_is=use_key_as_is)
 
 
-async def test_cache_manager_delete_with_key(cache_manager):
-    await cache_manager.save_with_key("key", "value")
-    await cache_manager.delete_with_key("key")
+@pytest.mark.parametrize("use_key_as_is", (True, False))
+async def test_cache_manager_delete_with_key(cache_manager, use_key_as_is: bool):
+    await cache_manager.save_with_key("key", "value", use_key_as_is=use_key_as_is)
+    await cache_manager.delete_with_key("key", use_key_as_is=use_key_as_is)
     with pytest.raises(CacheRecordNotFoundError):
-        await cache_manager.get_with_key("key")
+        await cache_manager.get_with_key("key", use_key_as_is=use_key_as_is)
 
 
 async def test_cache_manager_set_many_with_sentinel(cache_manager_with_sentinel: CacheManager) -> None:
     await cache_manager_with_sentinel.save_with_key("test", "some_value")
     assert (await cache_manager_with_sentinel.get_with_key("test")).decode() == "some_value"
+
+
+async def test_cache_manager_use_key_as_is_works(
+    cache_manager: CacheManager, async_redis_client: Redis, test_dto: TestDTO
+) -> None:
+    key = "test.key.without.need.of.changing"
+    value = TestDTO(test_field=234)
+    await async_redis_client.set(key, value.model_dump_json())
+    assert await cache_manager.get_with_key(key=key, object_class=TestDTO, use_key_as_is=True) == value
