@@ -274,7 +274,7 @@ class CacheManager:
                         # Returns None
                         return_set[keys[key]] = value
             else:
-                return_set = {key: value for key, value in response.items()}
+                return_set = {keys[key]: value for key, value in response.items()}
 
         return return_set
 
