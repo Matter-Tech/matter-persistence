@@ -254,10 +254,10 @@ class CacheManager:
                 if value:
                     value_obj = json.loads(value.decode("utf-8"))
                     if isinstance(value_obj, list):
-                        return_set[processed_input[key]] = [object_class.model_validate_json(item) for item in
+                        return_set[processed_input[key]] = [object_class.model_validate(item) for item in
                                                             value_obj]
                     elif value_obj is not None:
-                        return_set[processed_input[key]] = object_class.model_validate_json(value_obj)
+                        return_set[processed_input[key]] = object_class.model_validate(value_obj)
                     else:
                         return_set[processed_input[key]] = value_obj
                 else:
