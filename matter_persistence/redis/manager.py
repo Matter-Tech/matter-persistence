@@ -251,9 +251,28 @@ class CacheManager:
     async def get_many_with_keys(
             self, keys: Sequence[str], object_class: type[Model] | None = None, use_key_as_is: bool = False
     ) -> dict[str, bytes | list[bytes] | Model | list[Model]]:
+        return_set: dict[str, bytes | list[bytes] | Model | list[Model]] = {}
+
         if use_key_as_is:
             async with self.__get_cache_client(for_writing=False) as cache_client:
                 response: dict[str, bytes | list[bytes]] = await cache_client.get_many_values(keys)
+
+            if object_class:
+                for key, value in response.items():
+                    if value:
+                        value_obj = json.loads(value.decode("utf-8"))
+                        if isinstance(value_obj, list):
+                            return_set[key] = [object_class.model_validate(item) for item in
+                                                                value_obj]
+                        elif value_obj is not None:
+                            return_set[key] = object_class.model_validate(value_obj)
+                        else:
+                            return_set[key] = value_obj
+                    else:
+                        # Returns None
+                        return_set[key] = value
+            else:
+                return_set = {key: value for key, value in response.items()}
         else:
             object_name = object_class.__name__ if object_class else None
             async with self.__get_cache_client(for_writing=False) as cache_client:
@@ -262,23 +281,22 @@ class CacheManager:
                 }
                 response: dict[str, bytes | list[bytes]] = await cache_client.get_many_values(processed_input.keys())
 
-        return_set: dict[str, bytes | list[bytes] | Model | list[Model]] = {}
-        if object_class:
-            for key, value in response.items():
-                if value:
-                    value_obj = json.loads(value.decode("utf-8"))
-                    if isinstance(value_obj, list):
-                        return_set[processed_input[key]] = [object_class.model_validate(item) for item in
-                                                            value_obj]
-                    elif value_obj is not None:
-                        return_set[processed_input[key]] = object_class.model_validate(value_obj)
+            if object_class:
+                for key, value in response.items():
+                    if value:
+                        value_obj = json.loads(value.decode("utf-8"))
+                        if isinstance(value_obj, list):
+                            return_set[processed_input[key]] = [object_class.model_validate(item) for item in
+                                                                value_obj]
+                        elif value_obj is not None:
+                            return_set[processed_input[key]] = object_class.model_validate(value_obj)
+                        else:
+                            return_set[processed_input[key]] = value_obj
                     else:
-                        return_set[processed_input[key]] = value_obj
-                else:
-                    # Returns None
-                    return_set[processed_input[key]] = value
-        else:
-            return_set = {processed_input[key]: value for key, value in response.items()}
+                        # Returns None
+                        return_set[processed_input[key]] = value
+            else:
+                return_set = {processed_input[key]: value for key, value in response.items()}
 
         return return_set
 
