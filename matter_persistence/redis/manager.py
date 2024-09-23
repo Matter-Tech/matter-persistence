@@ -278,8 +278,6 @@ class CacheManager:
 
         return return_set
 
-
-
     async def delete_with_key(
         self,
         key: str,
