@@ -2,6 +2,7 @@ from collections.abc import Sequence
 from typing import Any
 from uuid import UUID
 
+from pydantic import TypeAdapter, ValidationError
 from redis import asyncio as aioredis
 
 from matter_persistence.redis.async_redis_client import AsyncRedisClient
@@ -201,14 +202,33 @@ class CacheManager:
         object_class: type[Model] | None = None,
         expiration_in_seconds: int | None = None,
     ) -> None:
+        """
+        Saves many given keys with values.
+
+        Note that values might be sequences of objects of given object_class, but they will be
+        stored as lists dumped as JSONs in Redis.
+
+        :param values_to_store: a dictionary, mapping keys to values (see note above)
+        :param object_class: optional model to facilitate serialisation of data
+        :param expiration_in_seconds: cache expiration time in seconds
+        """
         object_name = object_class.__name__ if object_class else None
 
         async with self.__get_cache_client(for_writing=True) as cache_client:
             if object_class is not None:
-                processed_input = {
-                    CacheHelper.create_basic_hash_key(key, object_name): value.model_dump_json()
-                    for key, value in values_to_store.items()
-                }
+                processed_input = {}
+                for key, value in values_to_store.items():
+                    processed_key = CacheHelper.create_basic_hash_key(key, object_name)
+                    if isinstance(value, Sequence):
+                        adapter = TypeAdapter(list[object_class])  # type: ignore[valid-type]
+                        if not isinstance(value, list):
+                            pre_processed_value = [v for v in value]
+                        else:
+                            pre_processed_value = value
+                        processed_value = adapter.dump_json(pre_processed_value)
+                    else:
+                        processed_value = value.model_dump_json()
+                    processed_input[processed_key] = processed_value
             else:
                 processed_input = {
                     CacheHelper.create_basic_hash_key(key, object_name): value for key, value in values_to_store.items()
@@ -235,20 +255,22 @@ class CacheManager:
 
     async def get_many_with_keys(
         self, keys: Sequence[str], object_class: type[Model] | None = None
-    ) -> dict[str, bytes | list[bytes] | Model | list[Model]]:
+    ) -> dict[str, bytes | list[bytes] | Model | list[Model] | None]:
         object_name = object_class.__name__ if object_class else None
-        return_set: dict[str, bytes | list[bytes] | Model | list[Model]] = {}
+        return_set: dict[str, bytes | list[bytes] | Model | list[Model] | None] = {}
         async with self.__get_cache_client(for_writing=False) as cache_client:
             processed_input = {
                 CacheHelper.create_basic_hash_key(original_key, object_name): original_key for original_key in keys
             }
-            response: dict[str, bytes | list[bytes]] = await cache_client.get_many_values(processed_input.keys())
+            response: dict[str, bytes] = await cache_client.get_many_values(processed_input.keys())
             if object_class:
                 for key, value in response.items():
-                    if isinstance(value, list):
-                        return_set[processed_input[key]] = [object_class.model_validate_json(item) for item in value]
-                    elif value is not None:
-                        return_set[processed_input[key]] = object_class.model_validate_json(value)
+                    if value is not None:
+                        try:
+                            return_set[processed_input[key]] = object_class.model_validate_json(value)
+                        except ValidationError:
+                            adapter = TypeAdapter(list[object_class])  # type: ignore[valid-type]
+                            return_set[processed_input[key]] = adapter.validate_json(value)
                     else:
                         return_set[processed_input[key]] = value
             else:
