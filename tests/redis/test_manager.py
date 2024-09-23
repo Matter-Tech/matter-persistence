@@ -95,9 +95,9 @@ async def test_cache_manager_save_and_get_many_objects_converts_tuples_to_lists(
 async def test_cache_manager_save_and_get_many_raw_values_with_keys_success(cache_manager: CacheManager) -> None:
     test_input = {f"key_{i}": f"test_value_{i}" for i in range(10)}
     await cache_manager.save_many_with_keys(test_input, None, 100)
-    response: dict[
-        str, bytes | list[bytes] | BaseModel | list[BaseModel] | None
-    ] = await cache_manager.get_many_with_keys(list(test_input.keys()), None)
+    response: dict[str, bytes | BaseModel | list[BaseModel] | None] = await cache_manager.get_many_with_keys(
+        list(test_input.keys()), None
+    )
     for key, value in response.items():
         assert isinstance(value, bytes)
         assert test_input[key] == value.decode()

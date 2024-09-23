@@ -255,9 +255,24 @@ class CacheManager:
 
     async def get_many_with_keys(
         self, keys: Sequence[str], object_class: type[Model] | None = None
-    ) -> dict[str, bytes | list[bytes] | Model | list[Model] | None]:
+    ) -> dict[str, bytes | Model | list[Model] | None]:
+        """
+        Gets multiple values from the cache.
+
+        If object_class is specified, tries to deserialise the values into the given class. A list of values in the cache
+        for a single key is also supported. Values for all keys need to be of the same class.
+
+        The resulting dictionary values can contain:
+        - an object or a list of objects (if object_class is given)
+        - a raw bytes value (if object_class isn't given)
+        - None, if the key doesn't exist in cache
+
+        :param keys: which keys to get from the cache
+        :param object_class: used in deserialisation of cached values
+        :return: a dictionary, mapping the original set of keys to the corresponding values from the cache
+        """
         object_name = object_class.__name__ if object_class else None
-        return_set: dict[str, bytes | list[bytes] | Model | list[Model] | None] = {}
+        return_set: dict[str, bytes | Model | list[Model] | None] = {}
         async with self.__get_cache_client(for_writing=False) as cache_client:
             processed_input = {
                 CacheHelper.create_basic_hash_key(original_key, object_name): original_key for original_key in keys
