@@ -259,7 +259,7 @@ class CacheManager:
             keys_map = {CacheHelper.create_basic_hash_key(original_key, object_name): original_key for original_key in keys}
 
         async with self.__get_cache_client(for_writing=False) as cache_client:
-            response: dict[str, bytes | list[bytes]] = await cache_client.get_many_values(keys)
+            response: dict[str, bytes | list[bytes]] = await cache_client.get_many_values(keys_map)
             if object_class:
                 for key, value in response.items():
                     if value:
