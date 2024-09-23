@@ -254,9 +254,9 @@ class CacheManager:
         object_name = object_class.__name__ if object_class else None
         return_set: dict[str, bytes | list[bytes] | Model | list[Model]] = {}
         if use_key_as_is:
-            keys = {key: key for key in keys}
+            keys_map = {key: key for key in keys}
         else:
-            keys = {CacheHelper.create_basic_hash_key(original_key, object_name): original_key for original_key in keys}
+            keys_map = {CacheHelper.create_basic_hash_key(original_key, object_name): original_key for original_key in keys}
 
         async with self.__get_cache_client(for_writing=False) as cache_client:
             response: dict[str, bytes | list[bytes]] = await cache_client.get_many_values(keys)
@@ -265,16 +265,16 @@ class CacheManager:
                     if value:
                         value_obj = json.loads(value.decode("utf-8"))
                         if isinstance(value_obj, list):
-                            return_set[keys[key]] = [object_class.model_validate(item) for item in value_obj]
+                            return_set[keys_map[key]] = [object_class.model_validate_json(json.dumps(item)) for item in value_obj]
                         elif value_obj is not None:
-                            return_set[keys[key]] = object_class.model_validate(value_obj)
+                            return_set[keys_map[key]] = object_class.model_validate_json(json.dumps(value_obj))
                         else:
-                            return_set[keys[key]] = value_obj
+                            return_set[keys_map[key]] = value_obj
                     else:
                         # Returns None
-                        return_set[keys[key]] = value
+                        return_set[keys_map[key]] = value
             else:
-                return_set = {keys[key]: value for key, value in response.items()}
+                return_set = {keys_map[key]: value for key, value in response.items()}
 
         return return_set
 
