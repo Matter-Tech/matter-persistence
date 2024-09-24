@@ -84,6 +84,13 @@ async def test_cache_manager_save_and_get_many_objects_with_keys_success(cache_m
     assert response == test_dtos
 
 
+async def test_cache_manager_save_and_get_many_objects_with_keys_as_it_is_success(cache_manager: CacheManager) -> None:
+    test_dtos = {f"key_{i}": TestDTO(test_field=i) for i in range(10)}
+    await cache_manager.save_many_with_keys(test_dtos, TestDTO, 100, use_key_as_is=True)
+    response = await cache_manager.get_many_with_keys(list(test_dtos.keys()), TestDTO, use_key_as_is=True)
+    assert response == test_dtos
+
+
 async def test_cache_manager_save_and_get_many_objects_converts_tuples_to_lists(cache_manager: CacheManager) -> None:
     test_key = "key"
     test_values_tuple = (TestDTO(test_field=0), TestDTO(test_field=1))
