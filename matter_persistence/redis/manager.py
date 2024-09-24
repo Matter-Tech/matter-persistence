@@ -216,31 +216,28 @@ class CacheManager:
         """
         object_name = object_class.__name__ if object_class else None
 
-        if use_key_as_is:
-            if object_class is not None:
-                processed_input = {
-                    key: value.model_dump_json()
-                    for key, value in values_to_store.items()
-                }
-            else:
+        if object_class is not None:
+            processed_input = {}
+            for key, value in values_to_store.items():
+                if use_key_as_is:
+                    processed_key = key
+                else:
+                    processed_key = CacheHelper.create_basic_hash_key(key, object_name)
+                if isinstance(value, Sequence):
+                    adapter = TypeAdapter(list[object_class])  # type: ignore[valid-type]
+                    if not isinstance(value, list):
+                        pre_processed_value = [v for v in value]
+                    else:
+                        pre_processed_value = value
+                    processed_value = adapter.dump_json(pre_processed_value)
+                else:
+                    processed_value = value.model_dump_json()
+                processed_input[processed_key] = processed_value
+        else:
+            if use_key_as_is:
                 processed_input = {
                     key: value for key, value in values_to_store.items()
                 }
-        else:
-            if object_class is not None:
-                processed_input = {}
-                for key, value in values_to_store.items():
-                    processed_key = CacheHelper.create_basic_hash_key(key, object_name)
-                    if isinstance(value, Sequence):
-                        adapter = TypeAdapter(list[object_class])  # type: ignore[valid-type]
-                        if not isinstance(value, list):
-                            pre_processed_value = [v for v in value]
-                        else:
-                            pre_processed_value = value
-                        processed_value = adapter.dump_json(pre_processed_value)
-                    else:
-                        processed_value = value.model_dump_json()
-                    processed_input[processed_key] = processed_value
             else:
                 processed_input = {
                     CacheHelper.create_basic_hash_key(key, object_name): value for key, value in values_to_store.items()
