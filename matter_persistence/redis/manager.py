@@ -201,6 +201,7 @@ class CacheManager:
         values_to_store: dict[str, Any],
         object_class: type[Model] | None = None,
         expiration_in_seconds: int | None = None,
+        use_key_as_is: bool = False,
     ) -> None:
         """
         Saves many given keys with values.
@@ -214,7 +215,17 @@ class CacheManager:
         """
         object_name = object_class.__name__ if object_class else None
 
-        async with self.__get_cache_client(for_writing=True) as cache_client:
+        if use_key_as_is:
+            if object_class is not None:
+                processed_input = {
+                    key: value.model_dump_json()
+                    for key, value in values_to_store.items()
+                }
+            else:
+                processed_input = {
+                    key: value for key, value in values_to_store.items()
+                }
+        else:
             if object_class is not None:
                 processed_input = {}
                 for key, value in values_to_store.items():
@@ -233,6 +244,8 @@ class CacheManager:
                 processed_input = {
                     CacheHelper.create_basic_hash_key(key, object_name): value for key, value in values_to_store.items()
                 }
+
+        async with self.__get_cache_client(for_writing=True) as cache_client:
             await cache_client.set_many_values(processed_input, ttl=expiration_in_seconds)
 
     async def get_with_key(self, key: str, object_class: type[Model] | None = None, use_key_as_is: bool = False) -> Any:
