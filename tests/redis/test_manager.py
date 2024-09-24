@@ -1,4 +1,5 @@
 import asyncio
+import json
 
 import pytest
 from pydantic import BaseModel
@@ -72,31 +73,46 @@ async def test_cache_manager_save_with_key_and_get_with_key_success(cache_manage
     await cache_manager.save_with_key("key", test_dto, TestDTO, use_key_as_is=use_key_as_is)
     assert await cache_manager.get_with_key("key", TestDTO, use_key_as_is=use_key_as_is)
 
-
-async def test_cache_manager_save_and_get_many_objects_with_keys_success(cache_manager: CacheManager) -> None:
+@pytest.mark.parametrize("use_key_as_is", (True, False))
+async def test_cache_manager_save_and_get_many_objects_with_keys_success(cache_manager: CacheManager, use_key_as_is) -> None:
     test_dtos = {
         "key_0": [TestDTO(test_field=0), TestDTO(test_field=1)],
         "key_1": TestDTO(test_field=2),
         "key_3": [TestDTO(test_field=3)],
     }
-    await cache_manager.save_many_with_keys(test_dtos, TestDTO, 100)
-    response = await cache_manager.get_many_with_keys(list(test_dtos.keys()), TestDTO)
+    await cache_manager.save_many_with_keys(test_dtos, TestDTO, 100, use_key_as_is)
+    response = await cache_manager.get_many_with_keys(list(test_dtos.keys()), TestDTO, use_key_as_is)
     assert response == test_dtos
 
 
-async def test_cache_manager_save_and_get_many_objects_converts_tuples_to_lists(cache_manager: CacheManager) -> None:
+@pytest.mark.parametrize("test_dtos, object_class, use_as_it_is", [({f"key_{i}": TestDTO(test_field=i) for i in range(10)}, TestDTO, True),
+                                                                   ({f"key_{i}": TestDTO(test_field=i) for i in range(10)}, TestDTO, False),
+                                                                   ({f"key_{i}": i for i in range(10)}, None, True),
+                                                                   ({f"key_{i}": i for i in range(10)}, None, False)])
+async def test_cache_manager_save_and_get_many_objects(cache_manager: CacheManager, test_dtos, object_class, use_as_it_is) -> None:
+
+    await cache_manager.save_many_with_keys(values_to_store=test_dtos, object_class=object_class, expiration_in_seconds=100, use_key_as_is=use_as_it_is)
+    response = await cache_manager.get_many_with_keys(list(test_dtos.keys()), object_class, use_key_as_is=use_as_it_is)
+    for key, value in response.items():
+        if isinstance(value, bytes):
+            assert int(value.decode("utf-8")) == test_dtos[key]
+        else:
+            assert value == test_dtos[key]
+
+@pytest.mark.parametrize("use_key_as_is", (True, False))
+async def test_cache_manager_save_and_get_many_objects_converts_tuples_to_lists(cache_manager: CacheManager, use_key_as_is) -> None:
     test_key = "key"
     test_values_tuple = (TestDTO(test_field=0), TestDTO(test_field=1))
-    await cache_manager.save_many_with_keys({test_key: test_values_tuple}, TestDTO, 100)
-    response = await cache_manager.get_many_with_keys([test_key], TestDTO)
+    await cache_manager.save_many_with_keys({test_key: test_values_tuple}, TestDTO, 100, use_key_as_is)
+    response = await cache_manager.get_many_with_keys([test_key], TestDTO, use_key_as_is)
     assert response[test_key] == [v for v in test_values_tuple]
 
-
-async def test_cache_manager_save_and_get_many_raw_values_with_keys_success(cache_manager: CacheManager) -> None:
+@pytest.mark.parametrize("use_key_as_is", (True, False))
+async def test_cache_manager_save_and_get_many_raw_values_with_keys_success(cache_manager: CacheManager, use_key_as_is) -> None:
     test_input = {f"key_{i}": f"test_value_{i}" for i in range(10)}
-    await cache_manager.save_many_with_keys(test_input, None, 100)
+    await cache_manager.save_many_with_keys(test_input, None, 100, use_key_as_is)
     response: dict[str, bytes | BaseModel | list[BaseModel] | None] = await cache_manager.get_many_with_keys(
-        list(test_input.keys()), None
+        list(test_input.keys()), None, use_key_as_is
     )
     for key, value in response.items():
         assert isinstance(value, bytes)

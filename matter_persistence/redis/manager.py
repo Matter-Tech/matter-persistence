@@ -201,6 +201,7 @@ class CacheManager:
         values_to_store: dict[str, Any],
         object_class: type[Model] | None = None,
         expiration_in_seconds: int | None = None,
+        use_key_as_is: bool = False,
     ) -> None:
         """
         Saves many given keys with values.
@@ -211,28 +212,38 @@ class CacheManager:
         :param values_to_store: a dictionary, mapping keys to values (see note above)
         :param object_class: optional model to facilitate serialisation of data
         :param expiration_in_seconds: cache expiration time in seconds
+        :param use_key_as_is: whether to use key as is
         """
         object_name = object_class.__name__ if object_class else None
 
-        async with self.__get_cache_client(for_writing=True) as cache_client:
-            if object_class is not None:
-                processed_input = {}
-                for key, value in values_to_store.items():
+        if object_class is not None:
+            processed_input = {}
+            for key, value in values_to_store.items():
+                if use_key_as_is:
+                    processed_key = key
+                else:
                     processed_key = CacheHelper.create_basic_hash_key(key, object_name)
-                    if isinstance(value, Sequence):
-                        adapter = TypeAdapter(list[object_class])  # type: ignore[valid-type]
-                        if not isinstance(value, list):
-                            pre_processed_value = [v for v in value]
-                        else:
-                            pre_processed_value = value
-                        processed_value = adapter.dump_json(pre_processed_value)
+                if isinstance(value, Sequence):
+                    adapter = TypeAdapter(list[object_class])  # type: ignore[valid-type]
+                    if not isinstance(value, list):
+                        pre_processed_value = [v for v in value]
                     else:
-                        processed_value = value.model_dump_json()
-                    processed_input[processed_key] = processed_value
+                        pre_processed_value = value
+                    processed_value = adapter.dump_json(pre_processed_value)
+                else:
+                    processed_value = value.model_dump_json()
+                processed_input[processed_key] = processed_value
+        else:
+            if use_key_as_is:
+                processed_input = {
+                    key: value for key, value in values_to_store.items()
+                }
             else:
                 processed_input = {
                     CacheHelper.create_basic_hash_key(key, object_name): value for key, value in values_to_store.items()
                 }
+
+        async with self.__get_cache_client(for_writing=True) as cache_client:
             await cache_client.set_many_values(processed_input, ttl=expiration_in_seconds)
 
     async def get_with_key(self, key: str, object_class: type[Model] | None = None, use_key_as_is: bool = False) -> Any:
@@ -254,7 +265,7 @@ class CacheManager:
         return value
 
     async def get_many_with_keys(
-        self, keys: Sequence[str], object_class: type[Model] | None = None
+        self, keys: Sequence[str], object_class: type[Model] | None = None, use_key_as_is: bool = False
     ) -> dict[str, bytes | Model | list[Model] | None]:
         """
         Gets multiple values from the cache.
@@ -269,27 +280,31 @@ class CacheManager:
 
         :param keys: which keys to get from the cache
         :param object_class: used in deserialisation of cached values
+        :param use_key_as_is: whether to use key as is
         :return: a dictionary, mapping the original set of keys to the corresponding values from the cache
         """
         object_name = object_class.__name__ if object_class else None
         return_set: dict[str, bytes | Model | list[Model] | None] = {}
+        if use_key_as_is:
+            keys_map = {key: key for key in keys}
+        else:
+            keys_map = {CacheHelper.create_basic_hash_key(original_key, object_name): original_key for original_key in
+                        keys}
+
         async with self.__get_cache_client(for_writing=False) as cache_client:
-            processed_input = {
-                CacheHelper.create_basic_hash_key(original_key, object_name): original_key for original_key in keys
-            }
-            response: dict[str, bytes] = await cache_client.get_many_values(processed_input.keys())
+            response: dict[str, bytes] = await cache_client.get_many_values(keys_map)
             if object_class:
                 for key, value in response.items():
                     if value is not None:
                         try:
-                            return_set[processed_input[key]] = object_class.model_validate_json(value)
+                            return_set[keys_map[key]] = object_class.model_validate_json(value)
                         except ValidationError:
                             adapter = TypeAdapter(list[object_class])  # type: ignore[valid-type]
-                            return_set[processed_input[key]] = adapter.validate_json(value)
+                            return_set[keys_map[key]] = adapter.validate_json(value)
                     else:
-                        return_set[processed_input[key]] = value
+                        return_set[keys_map[key]] = value
             else:
-                return_set = {processed_input[key]: value for key, value in response.items()}
+                return_set = {keys_map[key]: value for key, value in response.items()}
         return return_set
 
     async def delete_with_key(
