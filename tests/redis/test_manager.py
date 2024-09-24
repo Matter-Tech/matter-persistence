@@ -85,19 +85,19 @@ async def test_cache_manager_save_and_get_many_objects_with_keys_success(cache_m
     assert response == test_dtos
 
 
-async def test_cache_manager_save_and_get_many_objects_with_keys_as_it_is_success(cache_manager: CacheManager) -> None:
-    test_dtos = {f"key_{i}": TestDTO(test_field=i) for i in range(10)}
-    await cache_manager.save_many_with_keys(test_dtos, TestDTO, 100, use_key_as_is=True)
-    response = await cache_manager.get_many_with_keys(list(test_dtos.keys()), TestDTO, use_key_as_is=True)
-    assert response == test_dtos
+@pytest.mark.parametrize("test_dtos, object_class, use_as_it_is", [({f"key_{i}": TestDTO(test_field=i) for i in range(10)}, TestDTO, True),
+                                                                   ({f"key_{i}": TestDTO(test_field=i) for i in range(10)}, TestDTO, False),
+                                                                   ({f"key_{i}": i for i in range(10)}, None, True),
+                                                                   ({f"key_{i}": i for i in range(10)}, None, False)])
+async def test_cache_manager_save_and_get_many_objects(cache_manager: CacheManager, test_dtos, object_class, use_as_it_is) -> None:
 
-
-async def test_cache_manager_save_and_get_many_objects_with_keys_as_it_is_without_objectclass_success(cache_manager: CacheManager) -> None:
-    test_keys = {f"key_{i}": i for i in range(10)}
-    await cache_manager.save_many_with_keys(values_to_store=test_keys, expiration_in_seconds=100, use_key_as_is=True)
-    response = await cache_manager.get_many_with_keys(keys=list(test_keys.keys()), use_key_as_is=True)
+    await cache_manager.save_many_with_keys(values_to_store=test_dtos, object_class=object_class, expiration_in_seconds=100, use_key_as_is=use_as_it_is)
+    response = await cache_manager.get_many_with_keys(list(test_dtos.keys()), object_class, use_key_as_is=use_as_it_is)
     for key, value in response.items():
-        assert int(value.decode("utf-8")) == test_keys[key]
+        if isinstance(value, bytes):
+            assert int(value.decode("utf-8")) == test_dtos[key]
+        else:
+            assert value == test_dtos[key]
 
 
 async def test_cache_manager_save_and_get_many_objects_converts_tuples_to_lists(cache_manager: CacheManager) -> None:
