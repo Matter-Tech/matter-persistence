@@ -1,4 +1,5 @@
 import asyncio
+import json
 
 import pytest
 from pydantic import BaseModel
@@ -89,6 +90,14 @@ async def test_cache_manager_save_and_get_many_objects_with_keys_as_it_is_succes
     await cache_manager.save_many_with_keys(test_dtos, TestDTO, 100, use_key_as_is=True)
     response = await cache_manager.get_many_with_keys(list(test_dtos.keys()), TestDTO, use_key_as_is=True)
     assert response == test_dtos
+
+
+async def test_cache_manager_save_and_get_many_objects_with_keys_as_it_is_without_objectclass_success(cache_manager: CacheManager) -> None:
+    test_keys = {f"key_{i}": i for i in range(10)}
+    await cache_manager.save_many_with_keys(values_to_store=test_keys, expiration_in_seconds=100, use_key_as_is=True)
+    response = await cache_manager.get_many_with_keys(keys=list(test_keys.keys()), use_key_as_is=True)
+    for key, value in response.items():
+        assert int(value.decode("utf-8")) == test_keys[key]
 
 
 async def test_cache_manager_save_and_get_many_objects_converts_tuples_to_lists(cache_manager: CacheManager) -> None:
