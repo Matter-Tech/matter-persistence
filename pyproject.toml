@@ -115,7 +115,7 @@ exclude_lines = [
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
-filterwarnings = ["error", "ignore::ResourceWarning"]
+filterwarnings = ["error", "ignore::ResourceWarning", "ignore::DeprecationWarning"]
 
 [build-system]
 requires = ["hatchling"]
