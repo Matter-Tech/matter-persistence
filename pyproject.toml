@@ -21,7 +21,7 @@ dependencies = [
     "matter-exceptions~=2.0",
     "pydantic~=2.7",
     "sqlalchemy[asyncio]~=2.0",
-    "redis~=5.0",
+    "redis>=5,<8",
     "sqlalchemy-utils~=0.41"
 ]
 dynamic = ["version"]
