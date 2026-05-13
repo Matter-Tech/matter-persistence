@@ -1,5 +1,4 @@
 from datetime import datetime, timezone
-from typing import Optional
 from uuid import UUID, uuid4
 
 import sqlalchemy as sa
@@ -43,16 +42,12 @@ class Timestamp:
             id = sa.Column(sa.Integer, primary_key=True)
     """
 
-    created = sa.Column(sa.DateTime(timezone=True), default=datetime_with_utc_tz, nullable=False)
-    updated = sa.Column(sa.DateTime(timezone=True), default=datetime_with_utc_tz, nullable=False)
-
-
-# this is copied from sqlalchemy_utils too
-@sa.event.listens_for(Timestamp, "before_update", propagate=True)
-def timestamp_before_update(mapper, connection, target):
-    # When a model with a timestamp is updated; force update the updated
-    # timestamp.
-    target.updated = datetime.now(tz=timezone.utc)  # noqa: UP017
+    created: Mapped[datetime | None] = mapped_column(
+        sa.DateTime(timezone=True), default=datetime_with_utc_tz, nullable=False
+    )
+    updated: Mapped[datetime | None] = mapped_column(
+        sa.DateTime(timezone=True), default=datetime_with_utc_tz, nullable=False, onupdate=datetime_with_utc_tz
+    )
 
 
 class CustomBase(Base, Timestamp):
@@ -64,7 +59,7 @@ class CustomBase(Base, Timestamp):
 
     id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
     # soft deletion
-    deleted: Mapped[Optional[datetime]] = mapped_column(  # noqa: UP007
+    deleted: Mapped[datetime | None] = mapped_column(  # noqa: UP007
         DateTime(timezone=True), nullable=True, default=None
     )
 

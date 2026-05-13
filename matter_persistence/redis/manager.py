@@ -235,9 +235,7 @@ class CacheManager:
                 processed_input[processed_key] = processed_value
         else:
             if use_key_as_is:
-                processed_input = {
-                    key: value for key, value in values_to_store.items()
-                }
+                processed_input = {key: value for key, value in values_to_store.items()}
             else:
                 processed_input = {
                     CacheHelper.create_basic_hash_key(key, object_name): value for key, value in values_to_store.items()
@@ -288,8 +286,9 @@ class CacheManager:
         if use_key_as_is:
             keys_map = {key: key for key in keys}
         else:
-            keys_map = {CacheHelper.create_basic_hash_key(original_key, object_name): original_key for original_key in
-                        keys}
+            keys_map = {
+                CacheHelper.create_basic_hash_key(original_key, object_name): original_key for original_key in keys
+            }
 
         async with self.__get_cache_client(for_writing=False) as cache_client:
             response: dict[str, bytes] = await cache_client.get_many_values(keys_map)
