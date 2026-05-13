@@ -42,16 +42,12 @@ class Timestamp:
             id = sa.Column(sa.Integer, primary_key=True)
     """
 
-    created = sa.Column(sa.DateTime(timezone=True), default=datetime_with_utc_tz, nullable=False)
-    updated = sa.Column(sa.DateTime(timezone=True), default=datetime_with_utc_tz, nullable=False)
-
-
-# this is copied from sqlalchemy_utils too
-@sa.event.listens_for(Timestamp, "before_update", propagate=True)
-def timestamp_before_update(mapper, connection, target):
-    # When a model with a timestamp is updated; force update the updated
-    # timestamp.
-    target.updated = datetime.now(tz=timezone.utc)  # noqa: UP017
+    created: Mapped[datetime | None] = mapped_column(
+        sa.DateTime(timezone=True), default=datetime_with_utc_tz, nullable=False
+    )
+    updated: Mapped[datetime | None] = mapped_column(
+        sa.DateTime(timezone=True), default=datetime_with_utc_tz, nullable=False, onupdate=datetime_with_utc_tz
+    )
 
 
 class CustomBase(Base, Timestamp):
