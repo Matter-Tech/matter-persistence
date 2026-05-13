@@ -1,5 +1,4 @@
 from datetime import datetime, timezone
-from typing import Optional
 from uuid import UUID, uuid4
 
 import sqlalchemy as sa
@@ -64,7 +63,7 @@ class CustomBase(Base, Timestamp):
 
     id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
     # soft deletion
-    deleted: Mapped[Optional[datetime]] = mapped_column(  # noqa: UP007
+    deleted: Mapped[datetime | None] = mapped_column(  # noqa: UP007
         DateTime(timezone=True), nullable=True, default=None
     )
 
